@@ -1,5 +1,7 @@
 # LibOS - V0.5.0
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9d13481cbe6540e1bc9c880be897467f)](https://app.codacy.com/gh/pheonixfirewingz/LibOS?utm_source=github.com&utm_medium=referral&utm_content=pheonixfirewingz/LibOS&utm_campaign=Badge_Grade_Settings)
+
 **NOTE:** for setup instructions look in documentation dir !!!PENDING V1.0.0!!
 ## Contribution rules
 
