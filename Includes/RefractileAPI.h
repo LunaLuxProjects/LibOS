@@ -10,6 +10,7 @@ EXPORT_DLL losResult refDestroyRefractileContext(refHandle);
 // The Graphics API
 //---------------------------------------------------------------------------------------------------------
 DEFINE_HANDLE(refImage)
+DEFINE_HANDLE(refDrawPass)
 DEFINE_HANDLE(refDataBuffer)
 DEFINE_HANDLE(refFrameBuffer)
 DEFINE_HANDLE(refCommandBuffer)
@@ -17,9 +18,11 @@ DEFINE_HANDLE(refShaderProgram)
 
 typedef struct refCreateShaderProgramInfo
 {
-    const char* shaderLayout;
-    const char* vertexShader;
-    const char* fragmentShader;
+    const char* shader_layout;
+    const char* vertex_shader;
+    const char* fragment_shader;
+    //user is giving direct spirv
+    bool pre_compiled = false;
 } refCreateShaderProgramInfo;
 
 typedef enum refDataBufferType
@@ -46,22 +49,28 @@ EXPORT_DLL losResult refCreateDataBuffer(refDataBuffer *, refCreateDataBufferInf
 EXPORT_DLL losResult refCopyDataToDataBuffer(refDataBuffer, void *, size);
 EXPORT_DLL losResult refDestroyDataBuffer(refDataBuffer);
 
-EXPORT_DLL losResult refCreateFrameBuffer(refFrameBuffer *);
-EXPORT_DLL losResult refDestroyFrameBuffer(refFrameBuffer);
+EXPORT_DLL losResult refCreateFrameBuffer(refHandle,refFrameBuffer *);
+EXPORT_DLL losResult refDestroyFrameBuffer(refHandle,refFrameBuffer);
 
 EXPORT_DLL losResult refCreateCommandBuffer(refHandle, refCommandBuffer *);
 EXPORT_DLL losResult refDestroyCommandBuffer(refHandle, refCommandBuffer);
 
+EXPORT_DLL losResult refCreateDrawPass(refHandle, refDrawPass *);
+EXPORT_DLL losResult refDestroyDrawPass(refHandle, refDrawPass);
+
 EXPORT_DLL losResult refCreateShaderProgram(refHandle, refShaderProgram *, refCreateShaderProgramInfo &);
 EXPORT_DLL losResult refDestroyShaderProgram(refHandle, refShaderProgram);
 
+EXPORT_DLL refFrameBuffer refGetCurrentWindowFrameBuffer(refHandle,refCommandBuffer) noexcept;
+
 EXPORT_DLL losResult refBeginCommands(refHandle, refCommandBuffer);
-EXPORT_DLL losResult refBindFrameBuffer(refHandle, refCommandBuffer, refFrameBuffer);
+EXPORT_DLL losResult refBeginDrawing(refHandle, refCommandBuffer, refFrameBuffer, refDrawPass,const float32[4]);
 EXPORT_DLL losResult refBindVertexBuffer(refHandle, refCommandBuffer, refDataBuffer);
 EXPORT_DLL losResult refBindIndexBuffer(refHandle, refCommandBuffer, refDataBuffer);
 EXPORT_DLL losResult refBindShaderProgram(refHandle, refCommandBuffer, refShaderProgram);
-EXPORT_DLL losResult refDraw(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32,uint32);
+EXPORT_DLL losResult refDraw(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32);
 EXPORT_DLL losResult refDrawIndexed(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32,uint32);
+EXPORT_DLL losResult refEndDrawing(refHandle, refCommandBuffer);
 EXPORT_DLL losResult refEndCommands(refHandle, refCommandBuffer);
 EXPORT_DLL losResult refExecuteCommands(refHandle, refCommandBuffer, bool);
 //---------------------------------------------------------------------------------------------------------

@@ -99,7 +99,7 @@ losResult losCloseFile(losFileHandle handle)
     return LOS_SUCCESS;
 }
 
-losResult losReadFile(losFileHandle handle, void **data_ptr, size data_size)
+losResult losReadFile(losFileHandle handle, void **data_ptr, size* data_size)
 {
     struct stat sb
     {
@@ -124,7 +124,7 @@ losResult losReadFile(losFileHandle handle, void **data_ptr, size data_size)
     }
 
     if (data_ptr != nullptr)
-        data_size = bytesRead - 1;
+        *data_size = bytesRead - 1;
 
     return LOS_SUCCESS;
 }

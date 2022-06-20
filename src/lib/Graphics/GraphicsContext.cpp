@@ -1,19 +1,13 @@
 #define VMA_IMPLEMENTATION 1
 
 #include <RefractileAPI.h>
+#include <Components/Defines.h>
 
 #include <cstdio>
 #include <vector>
 
-#include "Components/Defines.h"
-#include "vkExternal.h"
-#include <vulkan/vulkan_core.h>
+#include "../InternalRefractile.h"
 
-/*----------------------------------------------------------------
-                                TODOLIST:
-    1. add handle->swap_chain funcionality to the mix
-    2. add handle->swap_chain resize to context + create callback resize for window resize
-  ----------------------------------------------------------------*/
 #define PROFILE_NAME VP_LUNARG_DESKTOP_PORTABILITY_2021_NAME
 #define PROFILE_SPEC_VERSION VP_LUNARG_DESKTOP_PORTABILITY_2021_SPEC_VERSION
 
@@ -101,7 +95,6 @@ const char *getError(VkResult result)
     }
 }
 
-#define TEST(func) [[unlikely]]if((result = func) != VK_SUCCESS) { printf("LIB OS: Vulkan Error: %s\n", getError(result)); return LOS_ERROR_COULD_NOT_INIT;}
 
 void createSwapChainInfo(refHandle& handle,VkSwapchainCreateInfoKHR* swap_chain_create_info,VkSwapchainKHR old_swap_chain)
 {
@@ -180,7 +173,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         const VkInstanceCreateInfo inst_info{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &app_info, 0, nullptr, 2, extensions};
         const VpInstanceCreateInfo i_info {&inst_info,&profile_properties,0};
 
-        TEST(vpCreateInstance(&i_info,nullptr,&handle->instance))
+        VK_TEST(vpCreateInstance(&i_info,nullptr,&handle->instance),LOS_ERROR_COULD_NOT_INIT)
     }
     //surface
     {
@@ -188,22 +181,22 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         const VkWaylandSurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR, nullptr, 0,
                                                      window->display, window->surface};
 
-        TEST(vkCreateWaylandSurfaceKHR((*handle).instance, &surface_info, nullptr, &(*handle).surface))
+        VK_TEST(vkCreateWaylandSurfaceKHR((*handle).instance, &surface_info, nullptr, &(*handle).surface),LOS_ERROR_COULD_NOT_INIT)
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1
         const VkWin32SurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, nullptr, 0,
                                                         GetModuleHandle(nullptr),window->win_hand};
 
-        TEST(vkCreateWin32SurfaceKHR(handle->instance, &surface_info, nullptr, &handle->surface))
+        VK_TEST(vkCreateWin32SurfaceKHR(handle->instance, &surface_info, nullptr, &handle->surface),LOS_ERROR_COULD_NOT_INIT)
 #endif
     }
     //physical device
     {
         uint32 p_count = 0;
-        TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, nullptr))
+        VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, nullptr),LOS_ERROR_COULD_NOT_INIT)
         std::vector<VkPhysicalDevice> devices;
         devices.resize(p_count);
-        TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, devices.data()))
+        VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, devices.data()),LOS_ERROR_COULD_NOT_INIT)
         [[likely]]if(devices.size() == 1)
         {
             VkBool32 profile_supported;
@@ -223,14 +216,14 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         }
 
         VkBool32 support{false};
-        TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, handle->graphic_family_index, handle->surface, &support))
+        VK_TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, handle->graphic_family_index, handle->surface, &support),LOS_ERROR_COULD_NOT_INIT)
         [[unlikely]] if (!support)
         {
             printf("LIB OS: Vulkan Error: %s , %s\n", "something is not right with surface creation",getError(result)); 
             return LOS_ERROR_COULD_NOT_INIT;
         }
         uint32 count = 0;
-        TEST(vkGetPhysicalDeviceSurfaceFormatsKHR(handle->physical, handle->surface, &count, nullptr))
+        VK_TEST(vkGetPhysicalDeviceSurfaceFormatsKHR(handle->physical, handle->surface, &count, nullptr),LOS_ERROR_COULD_NOT_INIT)
         [[unlikely]]if (count == 0)
         {
             printf("LIB OS: Vulkan Error: %s\n", "no surface formats found"); 
@@ -242,7 +235,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         queueFamilies.resize(queueFamilyCount);
         vkGetPhysicalDeviceQueueFamilyProperties(handle->physical, &queueFamilyCount, queueFamilies.data());
         std::vector<VkSurfaceFormatKHR> formats(count);
-        TEST(vkGetPhysicalDeviceSurfaceFormatsKHR(handle->physical, handle->surface, &count, formats.data()))
+        VK_TEST(vkGetPhysicalDeviceSurfaceFormatsKHR(handle->physical, handle->surface, &count, formats.data()),LOS_ERROR_COULD_NOT_INIT)
 
 
         for (const auto& available_format : formats)
@@ -265,14 +258,26 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         uint32 i = 0;
         for (const auto &queueFamily : queueFamilies)
         {
+            (void)queueFamily;
             VkBool32 presentSupport = false;
-            TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, i, handle->surface, &presentSupport))
+            VK_TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, i, handle->surface, &presentSupport),LOS_ERROR_COULD_NOT_INIT)
             if (presentSupport)
+            {
                 handle->present_family_index = i;
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                handle->graphic_family_index = i;
+                break;
+            }
             i++;
         }
+        i = 0;
+        for (const auto &queueFamily : queueFamilies)
+        {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            {
+                handle->graphic_family_index = i;
+                break;
+            }
+            i++;
+        }            
     }
     //device
     {
@@ -280,7 +285,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         const VkDeviceQueueCreateInfo queue_create_info = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, handle->graphic_family_index, 1, &queuePriority};
         const VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,nullptr,0,1,&queue_create_info,0,nullptr,0,nullptr,nullptr};
         const VpDeviceCreateInfo profile_device_info = {&device_create_info,&profile_properties,0};
-        TEST(vpCreateDevice(handle->physical,&profile_device_info,nullptr,&handle->device))
+        VK_TEST(vpCreateDevice(handle->physical,&profile_device_info,nullptr,&handle->device),LOS_ERROR_COULD_NOT_INIT)
         vkGetDeviceQueue(handle->device, handle->graphic_family_index, 0, &handle->graphics_queue);
         [[likely]]if (handle->present_family_index != handle->graphic_family_index)
         {
@@ -297,18 +302,18 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
         allocatorInfo.device = handle->device;
         allocatorInfo.instance = handle->instance;
 
-        TEST(vmaCreateAllocator(&allocatorInfo, &handle->vulkan_allocator))
+        VK_TEST(vmaCreateAllocator(&allocatorInfo, &handle->vulkan_allocator),LOS_ERROR_COULD_NOT_INIT)
     }
     {
         VkSwapchainCreateInfoKHR swap_chain_create_info = {};
         createSwapChainInfo(handle,&swap_chain_create_info,nullptr);
-        TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain));
+        VK_TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain),LOS_ERROR_COULD_NOT_INIT);
 
         uint32 image_count = 0;
-        TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr));
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr),LOS_ERROR_COULD_NOT_INIT);
         handle->swap_chain_images.resize(image_count);
         handle->swap_chain_image_views.resize(image_count);
-        TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()));
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()),LOS_ERROR_COULD_NOT_INIT);
 
         for (uint32_t i = 0; i < image_count; ++i)
         {
@@ -326,7 +331,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
             image_view_create_info.subresourceRange.levelCount = 1;
             image_view_create_info.subresourceRange.baseArrayLayer = 0;
             image_view_create_info.subresourceRange.layerCount = 1;
-            TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]));
+            VK_TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]),LOS_ERROR_COULD_NOT_INIT);
         }
     }
 
@@ -340,13 +345,13 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
 
         VkSwapchainCreateInfoKHR swap_chain_create_info = {};
         createSwapChainInfo(handle,&swap_chain_create_info,swap_chain);
-        TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain));
+        VK_TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain),LOS_ERROR_HANDLE_LOSSED);
 
         uint32 image_count = 0;
-        TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr));
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr),LOS_ERROR_HANDLE_LOSSED);
         handle->swap_chain_images.resize(image_count);
         handle->swap_chain_image_views.resize(image_count);
-        TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()));
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()),LOS_ERROR_HANDLE_LOSSED);
 
         for (uint32_t i = 0; i < image_count; ++i)
         {
@@ -364,23 +369,35 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
             image_view_create_info.subresourceRange.levelCount = 1;
             image_view_create_info.subresourceRange.baseArrayLayer = 0;
             image_view_create_info.subresourceRange.layerCount = 1;
-            TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]));
+            VK_TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]),LOS_ERROR_HANDLE_LOSSED);
         }
 
         vkDestroySwapchainKHR(handle->device, swap_chain, nullptr);
         return LOS_SUCCESS;
     };
-
+    //present semaphore
+    {
+        VkSemaphoreCreateInfo semaphore_create_info{};
+        semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        semaphore_create_info.pNext = nullptr;
+        semaphore_create_info.flags = 0;
+        VK_TEST(vkCreateSemaphore(handle->device, &semaphore_create_info, nullptr, &handle->present_semaphore),LOS_ERROR_COULD_NOT_INIT);
+        VK_TEST(vkCreateSemaphore(handle->device, &semaphore_create_info, nullptr, &handle->render_semaphore),LOS_ERROR_COULD_NOT_INIT);
+    }
     return LOS_SUCCESS;
 }
 
 losResult refUnAppendGraphicsContext(refHandle handle) noexcept
 {
+    vkDeviceWaitIdle(handle->device);
+    vkDestroySemaphore(handle->device, handle->render_semaphore,nullptr);
+    vkDestroySemaphore(handle->device, handle->present_semaphore,nullptr);
     for (auto view : handle->swap_chain_image_views)
         vkDestroyImageView(handle->device, view, nullptr);
-
+    
     vkDestroySwapchainKHR(handle->device, handle->swap_chain, nullptr);
     vmaDestroyAllocator(handle->vulkan_allocator);
+    vkDeviceWaitIdle(handle->device);
     vkDestroyDevice(handle->device,nullptr);
     vkDestroySurfaceKHR(handle->instance, handle->surface, nullptr);
     vkDestroyInstance(handle->instance, nullptr);

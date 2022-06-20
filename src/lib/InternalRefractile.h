@@ -20,6 +20,12 @@ struct refHandle_T
     VkSwapchainKHR swap_chain;
     std::vector<VkImage> swap_chain_images{};
     std::vector<VkImageView> swap_chain_image_views{};
+    std::vector<refFrameBuffer> framebuffer{};
+    VkSemaphore present_semaphore;
+    VkSemaphore render_semaphore;
 
     ALCcontext* audio_context;
 };
+
+const char *getError(VkResult result);
+#define VK_TEST(func,ret_val) [[unlikely]]if((result = func) != VK_SUCCESS) { printf("LIB OS: Vulkan Error: %s\n", getError(result)); return ret_val;}

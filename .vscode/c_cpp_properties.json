@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/Includes",
                 "${workspaceFolder}/debug-linux/vcpkg_installed/x64-linux/include",
-                "${workspaceFolder}/debug-windows/vcpkg_installed/x64-windows/include"
+                "${workspaceFolder}/debug-windows/vcpkg_installed/x64-windows/include",
+                "D:/VulkanSDK/1.3.211.0/Include"
             ],
             "defines": [
                 "_DEBUG",

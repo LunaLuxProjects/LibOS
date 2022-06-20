@@ -1,0 +1,18 @@
+{
+    "Vertex": 
+    {
+        "input":[],
+        "output":[]
+    },
+    "Fragment":
+    {
+        "input":[],
+        "output":[
+            {
+                "Position" : 0,
+                "Type" : "float4",
+                "Name" : "outColor"
+            }    
+        ]
+    }
+}
