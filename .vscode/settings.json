@@ -96,6 +96,7 @@
     "cmake.useCMakePresets": "always",
     "cmake.allowCommentsInPresetsFile": false,
     "cSpell.words": [
-        "spirv"
+        "spirv",
+        "subpass"
     ]
 }

@@ -10,7 +10,6 @@ EXPORT_DLL losResult refDestroyRefractileContext(refHandle);
 // The Graphics API
 //---------------------------------------------------------------------------------------------------------
 DEFINE_HANDLE(refImage)
-DEFINE_HANDLE(refDrawPass)
 DEFINE_HANDLE(refDataBuffer)
 DEFINE_HANDLE(refFrameBuffer)
 DEFINE_HANDLE(refCommandBuffer)
@@ -18,7 +17,7 @@ DEFINE_HANDLE(refShaderProgram)
 
 typedef struct refCreateShaderProgramInfo
 {
-    const char* shader_layout;
+    const char* shader_settings;
     const char* vertex_shader;
     const char* fragment_shader;
     //user is giving direct spirv
@@ -38,16 +37,26 @@ typedef struct refCreateDataBufferInfo
     size data_size;
 } refCreateDataBufferInfo;
 
-EXPORT_DLL losResult refAppendGraphicsContext(refHandle,losWindow) noexcept;
+typedef enum refSampleCount 
+{
+    REF_SAMPLE_COUNT_1 = 1,
+    REF_SAMPLE_COUNT_2 = 2,
+    REF_SAMPLE_COUNT_4 = 4,
+    REF_SAMPLE_COUNT_8 = 8,
+    REF_SAMPLE_COUNT_16 = 10,
+    REF_SAMPLE_COUNT_32 = 20,
+    REF_SAMPLE_COUNT_64 = 40
+} refSampleCount;
+
+typedef struct refCreateGraphicContextInfo
+{
+    refSampleCount sample_count = REF_SAMPLE_COUNT_1;
+    bool has_depth_stencil = false;
+
+} refCreateGraphicContextInfo;
+
+EXPORT_DLL losResult refAppendGraphicsContext(refHandle,losWindow,const refCreateGraphicContextInfo&) noexcept;
 EXPORT_DLL losResult refUnAppendGraphicsContext(refHandle) noexcept;
-
-EXPORT_DLL losResult refCreateImage(refImage *);
-EXPORT_DLL losResult refCopyDataToImage(refImage,void*,size);
-EXPORT_DLL losResult refDestroyImage(refImage);
-
-EXPORT_DLL losResult refCreateDataBuffer(refDataBuffer *, refCreateDataBufferInfo &);
-EXPORT_DLL losResult refCopyDataToDataBuffer(refDataBuffer, void *, size);
-EXPORT_DLL losResult refDestroyDataBuffer(refDataBuffer);
 
 EXPORT_DLL losResult refCreateFrameBuffer(refHandle,refFrameBuffer *);
 EXPORT_DLL losResult refDestroyFrameBuffer(refHandle,refFrameBuffer);
@@ -55,22 +64,17 @@ EXPORT_DLL losResult refDestroyFrameBuffer(refHandle,refFrameBuffer);
 EXPORT_DLL losResult refCreateCommandBuffer(refHandle, refCommandBuffer *);
 EXPORT_DLL losResult refDestroyCommandBuffer(refHandle, refCommandBuffer);
 
-EXPORT_DLL losResult refCreateDrawPass(refHandle, refDrawPass *);
-EXPORT_DLL losResult refDestroyDrawPass(refHandle, refDrawPass);
-
 EXPORT_DLL losResult refCreateShaderProgram(refHandle, refShaderProgram *, refCreateShaderProgramInfo &);
 EXPORT_DLL losResult refDestroyShaderProgram(refHandle, refShaderProgram);
 
-EXPORT_DLL refFrameBuffer refGetCurrentWindowFrameBuffer(refHandle,refCommandBuffer) noexcept;
-
 EXPORT_DLL losResult refBeginCommands(refHandle, refCommandBuffer);
-EXPORT_DLL losResult refBeginDrawing(refHandle, refCommandBuffer, refFrameBuffer, refDrawPass,const float32[4]);
-EXPORT_DLL losResult refBindVertexBuffer(refHandle, refCommandBuffer, refDataBuffer);
-EXPORT_DLL losResult refBindIndexBuffer(refHandle, refCommandBuffer, refDataBuffer);
-EXPORT_DLL losResult refBindShaderProgram(refHandle, refCommandBuffer, refShaderProgram);
-EXPORT_DLL losResult refDraw(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32);
-EXPORT_DLL losResult refDrawIndexed(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32,uint32);
-EXPORT_DLL losResult refEndDrawing(refHandle, refCommandBuffer);
+EXPORT_DLL losResult refCmdBeginDrawing(refHandle, refCommandBuffer, refFrameBuffer,const float32[4]);
+EXPORT_DLL losResult refCmdBindVertexBuffer(refHandle, refCommandBuffer, refDataBuffer);
+EXPORT_DLL losResult refCmdBindIndexBuffer(refHandle, refCommandBuffer, refDataBuffer);
+EXPORT_DLL losResult refCmdBindShaderProgram(refHandle, refCommandBuffer, refShaderProgram);
+EXPORT_DLL losResult refCmdDraw(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32);
+EXPORT_DLL losResult refCmdDrawIndexed(refHandle, refCommandBuffer,uint32,uint32,uint32,uint32,uint32);
+EXPORT_DLL losResult refCmdEndDrawing(refHandle, refCommandBuffer);
 EXPORT_DLL losResult refEndCommands(refHandle, refCommandBuffer);
 EXPORT_DLL losResult refExecuteCommands(refHandle, refCommandBuffer, bool);
 //---------------------------------------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 #include "Graphics/vkExternal.h"
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <RefractileAPI.h>
 
 struct refHandle_T
 {
@@ -23,9 +24,17 @@ struct refHandle_T
     std::vector<refFrameBuffer> framebuffer{};
     VkSemaphore present_semaphore;
     VkSemaphore render_semaphore;
-
+    VkRenderPass pass;
+    VmaAllocation depth_image_alloc;
+    VkImage depth_image;
+    VkImageView depth_image_view;
     ALCcontext* audio_context;
+    refSampleCount sample_count;
+    VkExtent2D current_screen_size;
+    bool used_depth;
+    bool closing = false;
 };
 
-const char *getError(VkResult result);
-#define VK_TEST(func,ret_val) [[unlikely]]if((result = func) != VK_SUCCESS) { printf("LIB OS: Vulkan Error: %s\n", getError(result)); return ret_val;}
+const char *getError(VkResult);
+bool check(VkResult,refHandle);
+#define VK_TEST(func,ret_val) [[unlikely]]if(check((result = func),handle)) { printf("LIB OS: Vulkan Error: %s\n", getError(result)); return ret_val;}

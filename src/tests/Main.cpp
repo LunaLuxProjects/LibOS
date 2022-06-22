@@ -21,16 +21,12 @@ int main()
 {
     using namespace std::chrono_literals;
     losResult res;
-    refCommandBuffer buffer;
-    refShaderProgram program;
-    refDrawPass pass;
     TEST(testFileIOMain())
     //TEST(testNetIOMain())
 
     std::string file CMAKE_SOURCE_DIR;
     file += "/tests";
     TEST(losSetAssetPath(file.c_str()));
-
     printf("final test  window test\n");
 
     losWindowInfo info;
@@ -46,24 +42,23 @@ int main()
 
         return (void *)nullptr;
     };
-
     losWindow window;
+    refCommandBuffer buffer;
+    refShaderProgram program;
     TEST(losCreateWindow(&window, info));
     TEST(losCreateKeyboard(window));
     TEST(losCreateMouse(window));
     TEST(refCreateRefractileContext(&handle));
-    TEST(refAppendGraphicsContext(handle, window));
-
+    refCreateGraphicContextInfo g_info;
+    TEST(refAppendGraphicsContext(handle, window,g_info));
     TEST(refCreateCommandBuffer(handle, &buffer));
-    TEST(refCreateDrawPass(handle, &pass));
     refCreateShaderProgramInfo shader_info;
-    shader_info.shader_layout = "$[asset_base]/Shader/layout.json";
-    shader_info.vertex_shader = "$[asset_base]/Shader/vertexShader.vert.spirv";
+    shader_info.shader_settings = "$[asset_base]/Shader/settings.json";
+    shader_info.vertex_shader = "$[asset_base]/Shader/VertexShader.vert.spirv";
     shader_info.fragment_shader = "$[asset_base]/Shader/fragmentShader.frag.spirv";
     shader_info.pre_compiled = true;
 
-    //TEST(refCreateShaderProgram(handle, &program, shader_info));
-
+    TEST(refCreateShaderProgram(handle, &program, shader_info));
     #ifdef __linux__
     std::this_thread::sleep_for(2s);
     #else
@@ -72,18 +67,16 @@ int main()
             if (losIsKeyDown(window, LOS_KEYBOARD_X))
                 losRequestClose(window);
             TEST(refBeginCommands(handle, buffer));
-            const float32 colour[4]{1.0f,0.0f,0.0f,0.0f};
-            TEST(refBeginDrawing(handle, buffer,refGetCurrentWindowFrameBuffer(handle,buffer),pass,colour));
-            //TEST(refBindShaderProgram(handle, buffer, program));
-            //TEST(refDraw(handle, buffer,3,1,0,0));
-            TEST(refEndDrawing(handle, buffer));
+            const float32 colour[4]{1.0f,1.0f,0.0f,0.0f};
+            TEST(refCmdBeginDrawing(handle, buffer,nullptr,colour));
+            TEST(refCmdBindShaderProgram(handle, buffer, program));
+            TEST(refCmdDraw(handle, buffer,3,1,0,0));
+            TEST(refCmdEndDrawing(handle, buffer));
             TEST(refEndCommands(handle, buffer));
             TEST(refExecuteCommands(handle, buffer, true));
         }
     #endif
 
-    //TEST(refDestroyShaderProgram(handle, program));
-    TEST(refDestroyDrawPass(handle, pass));
     TEST(refDestroyCommandBuffer(handle, buffer));
     TEST(refUnAppendGraphicsContext(handle));
     printf("TEST AUDIO API? - [Y/n]:");

@@ -2,14 +2,32 @@
 
 #include <RefractileAPI.h>
 #include <Components/Defines.h>
+#include "GraphicsWindow.h"
 
 #include <cstdio>
 #include <vector>
 
-#include "../InternalRefractile.h"
+#include "Share.h"
 
 #define PROFILE_NAME VP_LUNARG_DESKTOP_PORTABILITY_2021_NAME
 #define PROFILE_SPEC_VERSION VP_LUNARG_DESKTOP_PORTABILITY_2021_SPEC_VERSION
+losResult createSwapChain(refHandle handle,bool first);
+void destroySwapchain(refHandle handle);
+
+bool check(VkResult result,refHandle handle)
+{
+    if (result == VK_SUCCESS) return false;
+    if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        if(!hasWindowClosed())
+        {
+            destroySwapchain(handle);
+            (void)createSwapChain(handle,false);
+        }
+        return false;
+    }
+    return true;
+}
 
 const char *getError(VkResult result)
 {
@@ -95,8 +113,7 @@ const char *getError(VkResult result)
     }
 }
 
-
-void createSwapChainInfo(refHandle& handle,VkSwapchainCreateInfoKHR* swap_chain_create_info,VkSwapchainKHR old_swap_chain)
+void createSwapChainInfo(refHandle& handle,VkSwapchainCreateInfoKHR* swap_chain_create_info,VkSwapchainKHR old_swap_chain) noexcept
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle->physical, handle->surface, &surfaceCapabilities);
@@ -148,9 +165,132 @@ void createSwapChainInfo(refHandle& handle,VkSwapchainCreateInfoKHR* swap_chain_
     swap_chain_create_info->oldSwapchain = old_swap_chain;
 }
 
-losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
+losResult createSwapChain(refHandle handle,bool first)
+{
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
+    VkResult result;
+    vkQueueWaitIdle(handle->graphics_queue);
+    //depth stencil image
+    if(handle->used_depth)
+    {
+        VkImageCreateInfo dimg_info{};
+        dimg_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        dimg_info.pNext = nullptr;
+        dimg_info.flags = 0;
+        dimg_info.imageType = VK_IMAGE_TYPE_2D;
+        //FIXME: should be able to change from user
+        dimg_info.format = VK_FORMAT_D32_SFLOAT;
+        //-----------------------------------------
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle->physical, handle->surface, &surfaceCapabilities);
+        dimg_info.extent.width = surfaceCapabilities.currentExtent.width;
+        dimg_info.extent.height = surfaceCapabilities.currentExtent.height;
+        dimg_info.extent.depth = 1;
+        dimg_info.mipLevels = 1;
+        dimg_info.arrayLayers = 1;
+        dimg_info.samples = static_cast<VkSampleCountFlagBits>(handle->sample_count);
+        dimg_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        dimg_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        // for the depth image, we want to allocate it from GPU local memory
+        VmaAllocationCreateInfo dimg_allocinfo = {};
+        dimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        dimg_allocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        // allocate and create the image
+        vmaCreateImage(handle->vulkan_allocator, &dimg_info, &dimg_allocinfo, &handle->depth_image, &handle->depth_image_alloc, nullptr);
+
+        // build an image-view for the depth image to use for rendering
+        VkImageViewCreateInfo dview_info{};
+        dview_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        dview_info.pNext = nullptr;
+        dview_info.flags = 0;
+        dview_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        dview_info.image = handle->depth_image;
+        //FIXME: should be able to change from user
+        dview_info.format = VK_FORMAT_D32_SFLOAT;
+        //-----------------------------------------
+        dview_info.subresourceRange.baseMipLevel = 0;
+        dview_info.subresourceRange.levelCount = 1;
+        dview_info.subresourceRange.baseArrayLayer = 0;
+        dview_info.subresourceRange.layerCount = 1;
+        dview_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+        VK_TEST(vkCreateImageView(handle->device, &dview_info, nullptr, &handle->depth_image_view),LOS_ERROR_COULD_NOT_INIT);
+    }
+    //swap chain
+    {
+        VkSwapchainCreateInfoKHR swap_chain_create_info = {};
+        VkSwapchainKHR swap_chain = handle->swap_chain;
+
+        {
+            VkSurfaceCapabilitiesKHR surfaceCapabilities;
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle->physical, handle->surface, &surfaceCapabilities);
+            handle->current_screen_size = std::move(surfaceCapabilities.currentExtent);
+        }
+
+        if(!first) createSwapChainInfo(handle,&swap_chain_create_info,swap_chain);
+        else createSwapChainInfo(handle,&swap_chain_create_info,nullptr);
+
+        VK_TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain),LOS_ERROR_COULD_NOT_INIT);
+
+        if(!first) vkDestroySwapchainKHR(handle->device, swap_chain, nullptr);
+
+        uint32 image_count = 0;
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr),LOS_ERROR_COULD_NOT_INIT);
+        handle->swap_chain_images.resize(image_count);
+        handle->swap_chain_image_views.resize(image_count);
+        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()),LOS_ERROR_COULD_NOT_INIT);
+
+        for (uint32_t i = 0; i < image_count; ++i)
+        {
+            VkImageViewCreateInfo image_view_create_info{};
+            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            image_view_create_info.image = handle->swap_chain_images[i];
+            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            image_view_create_info.format = handle->surface_format.format;
+            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            image_view_create_info.subresourceRange.baseMipLevel = 0;
+            image_view_create_info.subresourceRange.levelCount = 1;
+            image_view_create_info.subresourceRange.baseArrayLayer = 0;
+            image_view_create_info.subresourceRange.layerCount = 1;
+            VK_TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]),LOS_ERROR_COULD_NOT_INIT);
+            refFrameBuffer frame_buffer;
+            losResult _result;
+            if((_result = refCreateFrameBuffer(handle,&frame_buffer,&handle->swap_chain_image_views[i])) != LOS_SUCCESS)
+                return _result;
+            handle->framebuffer.emplace_back(std::move(frame_buffer));
+        }
+    }
+    return LOS_SUCCESS;
+}
+
+void destroySwapchain(refHandle handle)
+{
+    vkDeviceWaitIdle(handle->device);
+    if(handle->used_depth)
+    {
+        vmaDestroyImage(handle->vulkan_allocator,handle->depth_image,handle->depth_image_alloc);
+        vkDestroyImageView(handle->device, handle->depth_image_view,nullptr);
+    }
+    for (auto frame: handle->framebuffer)
+        refDestroyFrameBuffer(handle,frame);
+    handle->framebuffer.clear();
+
+    for (auto view : handle->swap_chain_image_views)
+        vkDestroyImageView(handle->device, view, nullptr);
+    handle->swap_chain_image_views.clear();
+}
+
+losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refCreateGraphicContextInfo& info) noexcept
 {
     VkResult result;
+    handle->used_depth = info.has_depth_stencil;
+    handle->sample_count = info.sample_count;
     const VpProfileProperties profile_properties = {PROFILE_NAME, PROFILE_SPEC_VERSION};
     //instance
     {
@@ -304,76 +444,84 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
 
         VK_TEST(vmaCreateAllocator(&allocatorInfo, &handle->vulkan_allocator),LOS_ERROR_COULD_NOT_INIT)
     }
+    //render pass
     {
-        VkSwapchainCreateInfoKHR swap_chain_create_info = {};
-        createSwapChainInfo(handle,&swap_chain_create_info,nullptr);
-        VK_TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain),LOS_ERROR_COULD_NOT_INIT);
+        VkRenderPassCreateInfo render_pass_info{};
+        VkSubpassDescription subpass{};
+        VkAttachmentDescription colour_attachment{};
+        VkAttachmentReference colour_attachment_ref{};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_info.pNext = nullptr;
+        render_pass_info.flags = 0;
+        colour_attachment.format = handle->surface_format.format;
+        colour_attachment.samples = static_cast<VkSampleCountFlagBits>(info.sample_count);
+        colour_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colour_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colour_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colour_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colour_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colour_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        colour_attachment_ref.attachment = 0;
+        colour_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        uint32 image_count = 0;
-        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr),LOS_ERROR_COULD_NOT_INIT);
-        handle->swap_chain_images.resize(image_count);
-        handle->swap_chain_image_views.resize(image_count);
-        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()),LOS_ERROR_COULD_NOT_INIT);
-
-        for (uint32_t i = 0; i < image_count; ++i)
+        if(info.has_depth_stencil)
         {
-            VkImageViewCreateInfo image_view_create_info{};
-            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            image_view_create_info.image = handle->swap_chain_images[i];
-            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            image_view_create_info.format = handle->surface_format.format;
-            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            image_view_create_info.subresourceRange.baseMipLevel = 0;
-            image_view_create_info.subresourceRange.levelCount = 1;
-            image_view_create_info.subresourceRange.baseArrayLayer = 0;
-            image_view_create_info.subresourceRange.layerCount = 1;
-            VK_TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]),LOS_ERROR_COULD_NOT_INIT);
+            VkAttachmentReference depth_attachment_ref{};
+            depth_attachment_ref.attachment = 1;
+            depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            VkAttachmentDescription depth_attachment{};
+            //FIXME: should be able to change from user
+            depth_attachment.format = VK_FORMAT_D32_SFLOAT;
+            //-------------------------------
+            depth_attachment.samples = static_cast<VkSampleCountFlagBits>(info.sample_count);
+            depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            VkAttachmentDescription attachments[2] = {colour_attachment, depth_attachment};
+            render_pass_info.attachmentCount = 2;
+            render_pass_info.pAttachments = attachments;
+            subpass.pDepthStencilAttachment = &depth_attachment_ref;
         }
+        else
+        {
+            render_pass_info.attachmentCount = 1;
+            render_pass_info.pAttachments = &colour_attachment;
+        }
+
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colour_attachment_ref;
+
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        if(info.has_depth_stencil)
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        else
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        render_pass_info.subpassCount = 1;
+        render_pass_info.pSubpasses = &subpass;
+        render_pass_info.dependencyCount = 1;
+        render_pass_info.pDependencies = &dependency;
+
+        VK_TEST(vkCreateRenderPass(handle->device, &render_pass_info, nullptr, &handle->pass),LOS_ERROR_COULD_NOT_INIT);
     }
+    losResult _result;
+    if((_result = createSwapChain(handle,true)) != LOS_SUCCESS)
+        return _result;
 
     window->resize_callback = [](refHandle handle,uint64, uint64) 
     {
-        VkResult result;
-        for (auto view : handle->swap_chain_image_views)
-            vkDestroyImageView(handle->device, view, nullptr);
-
-        VkSwapchainKHR swap_chain = handle->swap_chain;
-
-        VkSwapchainCreateInfoKHR swap_chain_create_info = {};
-        createSwapChainInfo(handle,&swap_chain_create_info,swap_chain);
-        VK_TEST(vkCreateSwapchainKHR(handle->device, &swap_chain_create_info, nullptr, &handle->swap_chain),LOS_ERROR_HANDLE_LOSSED);
-
-        uint32 image_count = 0;
-        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, nullptr),LOS_ERROR_HANDLE_LOSSED);
-        handle->swap_chain_images.resize(image_count);
-        handle->swap_chain_image_views.resize(image_count);
-        VK_TEST(vkGetSwapchainImagesKHR(handle->device, handle->swap_chain, &image_count, handle->swap_chain_images.data()),LOS_ERROR_HANDLE_LOSSED);
-
-        for (uint32_t i = 0; i < image_count; ++i)
-        {
-            VkImageViewCreateInfo image_view_create_info{};
-            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            image_view_create_info.image = handle->swap_chain_images[i];
-            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            image_view_create_info.format = handle->surface_format.format;
-            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            image_view_create_info.subresourceRange.baseMipLevel = 0;
-            image_view_create_info.subresourceRange.levelCount = 1;
-            image_view_create_info.subresourceRange.baseArrayLayer = 0;
-            image_view_create_info.subresourceRange.layerCount = 1;
-            VK_TEST(vkCreateImageView(handle->device, &image_view_create_info, nullptr, &handle->swap_chain_image_views[i]),LOS_ERROR_HANDLE_LOSSED);
-        }
-
-        vkDestroySwapchainKHR(handle->device, swap_chain, nullptr);
-        return LOS_SUCCESS;
+        [[unlikely]]if(handle->closing) return LOS_SUCCESS;
+        destroySwapchain(handle);
+        return createSwapChain(handle,false);
     };
     //present semaphore
     {
@@ -389,13 +537,12 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window) noexcept
 
 losResult refUnAppendGraphicsContext(refHandle handle) noexcept
 {
+    handle->closing = true;
     vkDeviceWaitIdle(handle->device);
+    destroySwapchain(handle);
+    vkDestroyRenderPass(handle->device, handle->pass,nullptr);
     vkDestroySemaphore(handle->device, handle->render_semaphore,nullptr);
     vkDestroySemaphore(handle->device, handle->present_semaphore,nullptr);
-    for (auto view : handle->swap_chain_image_views)
-        vkDestroyImageView(handle->device, view, nullptr);
-    
-    vkDestroySwapchainKHR(handle->device, handle->swap_chain, nullptr);
     vmaDestroyAllocator(handle->vulkan_allocator);
     vkDeviceWaitIdle(handle->device);
     vkDestroyDevice(handle->device,nullptr);

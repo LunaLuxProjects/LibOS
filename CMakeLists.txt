@@ -33,6 +33,7 @@ configure_file(src/tests/Cmake.h.in ../src/tests/Cmake.h @ONLY)
 find_package(Vulkan REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
 find_package(FreeALUT CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 
 # add non auto includes here
 include_directories(${PROJECT_SOURCE_DIR}/Includes)
@@ -86,7 +87,7 @@ else()
 endif()
 endif()
 
-set(LINK_LIBS Vulkan::Vulkan OpenAL::OpenAL FreeALUT::alut)
+set(LINK_LIBS Vulkan::Vulkan OpenAL::OpenAL FreeALUT::alut jsoncpp_lib jsoncpp_object JsonCpp::JsonCpp)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set(LINK_LIBS ${LINK_LIBS} ${WAYLAND_LIBRARIES})

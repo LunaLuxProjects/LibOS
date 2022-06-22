@@ -1,8 +1,6 @@
-#include <RefractileAPI.h>
-#include "Structs.h"
-#include <unordered_map>
+#include "Share.h"
 
-bool threadCheck(refCommandBuffer& handle) noexcept
+inline bool threadCheck(refCommandBuffer& handle) noexcept
 {
     if(handle->creator != std::this_thread::get_id())
         return false;
@@ -52,6 +50,7 @@ losResult refDestroyCommandBuffer(refHandle handle, refCommandBuffer buffer)
 
 losResult refBeginCommands(refHandle handle, refCommandBuffer buffer)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     VkResult result;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
@@ -67,21 +66,26 @@ losResult refBeginCommands(refHandle handle, refCommandBuffer buffer)
     return LOS_SUCCESS;
 }
 
-losResult refBeginDrawing(refHandle handle, refCommandBuffer buffer,refFrameBuffer f_buffer,refDrawPass draw_pass,const float32 colours[4])
+losResult refCmdBeginDrawing(refHandle handle, refCommandBuffer buffer,refFrameBuffer f_buffer,const float32 colours[4])
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     VkRenderPassBeginInfo rp_info{};
     rp_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rp_info.pNext = nullptr;
-    rp_info.renderPass = draw_pass->pass;
+    rp_info.renderPass = handle->pass;
     rp_info.renderArea.offset.x = 0;
     rp_info.renderArea.offset.y = 0;
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle->physical, handle->surface, &surfaceCapabilities);
-    rp_info.renderArea.extent = {static_cast<uint32_t>(surfaceCapabilities.currentExtent.width), static_cast<uint32_t>(surfaceCapabilities.currentExtent.height)};
+    rp_info.renderArea.extent = {std::min<uint32_t>(surfaceCapabilities.currentExtent.width,handle->current_screen_size.width), 
+                                 std::min<uint32_t>(surfaceCapabilities.currentExtent.height,handle->current_screen_size.height)};
     rp_info.clearValueCount = 2;
-    rp_info.framebuffer = f_buffer->buffer;
+    if(f_buffer)
+        rp_info.framebuffer = f_buffer->buffer;
+    else
+        rp_info.framebuffer = handle->framebuffer[buffer->index]->buffer;
     VkClearValue colour = {colours[0], colours[1], colours[2], colours[3]};
     VkClearValue depthClear = {};
     depthClear.depthStencil.depth = 1.f;
@@ -91,54 +95,62 @@ losResult refBeginDrawing(refHandle handle, refCommandBuffer buffer,refFrameBuff
     return LOS_SUCCESS;
 }
 
-losResult refBindVertexBuffer(refHandle, refCommandBuffer buffer, refDataBuffer)
+losResult refCmdBindVertexBuffer(refHandle handle, refCommandBuffer buffer, refDataBuffer)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     return LOS_SUCCESS;
 }
 
-losResult refBindIndexBuffer(refHandle, refCommandBuffer buffer, refDataBuffer)
+losResult refCmdBindIndexBuffer(refHandle handle, refCommandBuffer buffer, refDataBuffer)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     return LOS_SUCCESS;
 }
 
-losResult refBindShaderProgram(refHandle, refCommandBuffer buffer, refShaderProgram program)
+losResult refCmdBindShaderProgram(refHandle handle, refCommandBuffer buffer, refShaderProgram program)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
+    if(program->pipe == VK_NULL_HANDLE) return LOS_ERROR_HANDLE_LOSSED;
     vkCmdBindPipeline(buffer->buffer,VK_PIPELINE_BIND_POINT_GRAPHICS,program->pipe);
     return LOS_SUCCESS;
 }
 
-losResult refDraw(refHandle, refCommandBuffer buffer,uint32 vertex_count,uint32 instance_count,uint32 first_vertex,uint32 first_instance)
+losResult refCmdDraw(refHandle handle, refCommandBuffer buffer,uint32 vertex_count,uint32 instance_count,uint32 first_vertex,uint32 first_instance)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     vkCmdDraw(buffer->buffer, vertex_count, instance_count, first_vertex, first_instance);
     return LOS_SUCCESS;
 }
 
-losResult refDrawIndexed(refHandle, refCommandBuffer buffer,uint32 index_count,uint32 instance_count,uint32 first_index,uint32 vertex_offset,uint32 first_instance)
+losResult refCmdDrawIndexed(refHandle handle, refCommandBuffer buffer,uint32 index_count,uint32 instance_count,uint32 first_index,uint32 vertex_offset,uint32 first_instance)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     vkCmdDrawIndexed(buffer->buffer,index_count,instance_count,first_index,vertex_offset,first_instance);
     return LOS_SUCCESS;
 }
 
-losResult refEndDrawing(refHandle, refCommandBuffer buffer)
+losResult refCmdEndDrawing(refHandle handle, refCommandBuffer buffer)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     vkCmdEndRenderPass(buffer->buffer);
     return LOS_SUCCESS;
 }
 
-losResult refEndCommands(refHandle, refCommandBuffer buffer)
+losResult refEndCommands(refHandle handle, refCommandBuffer buffer)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     if(!threadCheck(buffer))
         return LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD;
     vkEndCommandBuffer(buffer->buffer);
@@ -147,6 +159,7 @@ losResult refEndCommands(refHandle, refCommandBuffer buffer)
 
 losResult refExecuteCommands(refHandle handle, refCommandBuffer buffer,bool present_mode)
 {
+    [[unlikely]]if(handle->closing) return LOS_SUCCESS;
     VkResult result;
     if (present_mode)
     {
