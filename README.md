@@ -1,10 +1,5 @@
 # LibOS - V0.5.521
 
-![CodigaCodeQuality](https://api.codiga.io/project/33769/score/svg)
-![Codiga Code Grade](https://api.codiga.io/project/33769/status/svg)
-[![CodeFactor](https://www.codefactor.io/repository/github/pheonixfirewingz/libos/badge)](https://www.codefactor.io/repository/github/pheonixfirewingz/libos)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/12f88b1f500446189eae6d825af954fe)](https://www.codacy.com/gh/pheonixfirewingz/LibOS/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pheonixfirewingz/LibOS&amp;utm_campaign=Badge_Grade)
-
 ## PROJECT GOAL
 
 The goal of the LunaLux LibOS is to act as an abstraction layer for native Operating System, Graphical and Audio APIS with a platform Vulkan Like Agnostic API to make cross platform development easier to achieve.
@@ -61,10 +56,6 @@ Nobody is perfect, and sometimes we mess things up. That said, Here are some goo
 - Linux Arch base
 - Linux Debian base
 - Mac OS Big Sur & up
-
-## CI Dashboards
-
->![icon](https://app.codiga.io/favicon-32x32.png) **https://app.codiga.io/hub/project/33769/LibOS**
 
 ## LICENSE
 
