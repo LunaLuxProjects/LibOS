@@ -90,7 +90,12 @@
         "xutility": "cpp",
         "filesystem": "cpp",
         "queue": "cpp",
-        "coroutine": "cpp"
+        "coroutine": "cpp",
+        "*.tcc": "cpp",
+        "cwctype": "cpp",
+        "memory_resource": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     },
     "cmake.loggingLevel": "info",
     "cmake.useCMakePresets": "always",

@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <json/json.h>
-#pragma region readfile
+
 losResult readFile(const std::string path,void** data,size* d_size)
 {
     losResult res;
@@ -22,8 +22,7 @@ losResult readFile(const std::string path,void** data,size* d_size)
 
     return LOS_SUCCESS;
 }
-#pragma endregion
-#pragma region pre_compiled helper functions
+
 losResult createShaderModule(refHandle handle,VkResult* result,VkShaderModule* module,const char* path) 
 {
     losResult res;
@@ -48,8 +47,7 @@ losResult createShaderModule(refHandle handle,VkResult* result,VkShaderModule* m
 
     return LOS_SUCCESS;
 }
-#pragma endregion
-#pragma region JSON decoding helper functions
+
 losResult jsonToLayoutShaderObject(const Json::Value base,LayoutObject** program_input,LayoutObject** program_output,const char * path)
 {
     if(!base["Input"].isNull())
@@ -234,7 +232,7 @@ losResult jsonToLayoutShaderObject(const Json::Value base,LayoutObject** program
     }
     return LOS_SUCCESS;
 }
-#pragma endregion
+
 losResult refCreateShaderProgram(refHandle handle, refShaderProgram * program, refCreateShaderProgramInfo & info)
 {
     VkResult result;
@@ -250,7 +248,6 @@ losResult refCreateShaderProgram(refHandle handle, refShaderProgram * program, r
         return res;
     }
     std::vector<std::string> compiler_flags;
-    #pragma region JSON decoding
     {
         Json::Value root;
         Json::Reader reader;
@@ -314,7 +311,6 @@ losResult refCreateShaderProgram(refHandle handle, refShaderProgram * program, r
                 compiler_flags.push_back("-K=false");
         }
     }
-    #pragma endregion
     VkShaderModule vertex,fragment;
     (void)compiler_flags;
     if(info.pre_compiled)
@@ -340,7 +336,7 @@ losResult refCreateShaderProgram(refHandle handle, refShaderProgram * program, r
     fragShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-
+    (void)shaderStages;
     
     
     vkDestroyShaderModule(handle->device,vertex,nullptr);

@@ -6,7 +6,9 @@
                 "${workspaceFolder}/Includes",
                 "${workspaceFolder}/debug-linux/vcpkg_installed/x64-linux/include",
                 "${workspaceFolder}/debug-windows/vcpkg_installed/x64-windows/include",
-                "D:/VulkanSDK/1.3.211.0/Include"
+                "${VULKAN_SDK}/include",
+                "${JAVA_HOME}/include",
+                "/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
             ],
             "defines": [
                 "_DEBUG",

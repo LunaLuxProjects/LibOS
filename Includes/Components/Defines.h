@@ -2,7 +2,7 @@
 #if _WIN64
 #    define EXPORT_DLL extern "C" __declspec(dllexport)
 #else
-#    define EXPORT_DLL
+#    define EXPORT_DLL extern "C"
 #endif
 
 typedef unsigned char uint8;
