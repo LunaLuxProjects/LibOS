@@ -41,7 +41,7 @@ const losResult isLoaded(const bool clear)
     return LOS_SUCCESS;
 }
 
-void *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
+uint32 *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
 {
     std::vector<uint32> bytes;
     bytes.reserve(data_size);
@@ -50,9 +50,27 @@ void *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
     return std::move(bytes.data());
 }
 
-void *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
+uint32 *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
 {
     std::vector<uint32> bytes;
+    bytes.reserve(data_size);
+    for (size i = 0; i < data_size; i++)
+        bytes.emplace_back(htonl(data[i]));
+    return std::move(bytes.data());
+}
+
+int32 *losNetworkBytesToSystemBytesSigned(const int32 *data, const size data_size)
+{
+    std::vector<int32> bytes;
+    bytes.reserve(data_size);
+    for (size i = 0; i < data_size; i++)
+        bytes.emplace_back(ntohl(data[i]));
+    return std::move(bytes.data());
+}
+
+int32 *losSystemBytesToNetworkBytesSigned(const int32 *data, const size data_size)
+{
+    std::vector<int32> bytes;
     bytes.reserve(data_size);
     for (size i = 0; i < data_size; i++)
         bytes.emplace_back(htonl(data[i]));

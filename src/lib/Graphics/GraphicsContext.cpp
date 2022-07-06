@@ -2,7 +2,6 @@
 
 #include <RefractileAPI.h>
 #include <Components/Defines.h>
-#include "GraphicsWindow.h"
 
 #include <cstdio>
 #include <vector>
@@ -19,7 +18,7 @@ bool check(VkResult result,refHandle handle)
     if (result == VK_SUCCESS) return false;
     if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        if(!hasWindowClosed())
+        if(!(*handle->window)->window->hasWindowClosed())
         {
             destroySwapchain(handle);
             (void)createSwapChain(handle,false);
@@ -291,6 +290,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
     VkResult result;
     handle->used_depth = info.has_depth_stencil;
     handle->sample_count = info.sample_count;
+    handle->window = &window;
     const VpProfileProperties profile_properties = {PROFILE_NAME, PROFILE_SPEC_VERSION};
     //instance
     {
@@ -310,7 +310,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
                                        VK_API_VERSION_1_3};
 
         const char * extensions[] = {VK_KHR_SURFACE_EXTENSION_NAME,VK_KHR_WSI_SURFACE_EXTENSION_NAME};
-        const VkInstanceCreateInfo inst_info{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &app_info, 0, nullptr, 2, extensions};
+        const VkInstanceCreateInfo inst_info{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &app_info, 0, nullptr, 1 + VK_KHR_WSI_SURFACE_EXTENSION_NAME_SIZE, extensions};
         const VpInstanceCreateInfo i_info {&inst_info,&profile_properties,0};
 
         VK_TEST(vpCreateInstance(&i_info,nullptr,&handle->instance),LOS_ERROR_COULD_NOT_INIT)
@@ -318,10 +318,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
     //surface
     {
 #if CMAKE_SYSTEM_NUMBER == 0
-        const VkWaylandSurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR, nullptr, 0,
-                                                     window->display, window->surface};
-
-        VK_TEST(vkCreateWaylandSurfaceKHR((*handle).instance, &surface_info, nullptr, &(*handle).surface),LOS_ERROR_COULD_NOT_INIT)
+        window->window->losCreateVulkanSurface(handle);
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1
         const VkWin32SurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, nullptr, 0,
@@ -339,13 +336,15 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, devices.data()),LOS_ERROR_COULD_NOT_INIT)
         [[likely]]if(devices.size() == 1)
         {
+            printf("LIB OS: Vulkan Info: %s\n","We only found one physical device!"); 
             VkBool32 profile_supported;
+            VkPhysicalDeviceProperties info;
             result = vpGetPhysicalDeviceProfileSupport(handle->instance,devices[0], &profile_properties, &profile_supported);
+            vkGetPhysicalDeviceProperties(devices[0], &info);
 
             if (!profile_supported)
             {
-                printf("LIB OS: Vulkan Error: %s\n", "Required Profile Not Supported"); 
-                return LOS_ERROR_COULD_NOT_INIT;
+                printf("LIB OS: Vulkan WARNING: Device - %s | %s\n",info.deviceName,"Device Required Profile Not Supported"); 
             }
             handle->physical = devices[0];
         }
@@ -517,7 +516,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
     if((_result = createSwapChain(handle,true)) != LOS_SUCCESS)
         return _result;
 
-    window->resize_callback = [](refHandle handle,uint64, uint64) 
+    window->window->resize_callback = [](refHandle handle,uint64, uint64) 
     {
         [[unlikely]]if(handle->closing) return LOS_SUCCESS;
         destroySwapchain(handle);

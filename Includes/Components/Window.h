@@ -132,7 +132,14 @@ typedef enum losKeyboardButton : uint16
 
 typedef struct losWindowInfo
 {
-    uint8 sub_window;
+    /*this is used for supported platroms will talk to the kernel to draw to the display if the 
+     * backend dose not support it will revert to the default behavior
+     * ALERT: this is not to be used in applications to act as fullscreen as it takes over any 
+     * window manager the OS may have this could break your OS. 
+     * 
+     * !!!USE "is_compositeServer" AT YOUR OWN RISK!!
+     */
+    bool is_compositeServer = false;
     losSize window_size;
     char* title;
     size title_size;
@@ -141,8 +148,8 @@ typedef struct losWindowInfo
 
 typedef struct losPosition
 {
-    uint64 x;
-    uint64 y;
+    int64 x;
+    int64 y;
 } losPosition;
 
 EXPORT_DLL losResult losCreateWindow(losWindow *, losWindowInfo &);

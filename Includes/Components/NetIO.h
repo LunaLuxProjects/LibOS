@@ -16,7 +16,7 @@ typedef enum losSocketBit : uint8
 typedef struct losCreateSocketInfo
 {
     uint8 socketBits;
-    char* address;
+    const char* address;
     size address_size;
     uint16 port;
 } losCreateSocketInfo;
@@ -27,8 +27,10 @@ typedef struct losCreateSocketServerListenInfo
     losListenCallback callback;
 } losCreateSocketServerListenInfo;
 
-EXPORT_DLL void *losNetworkBytesToSystemBytes(const uint32 *,const size);
-EXPORT_DLL void *losSystemBytesToNetworkBytes(const uint32 *, const size);
+EXPORT_DLL uint32 *losNetworkBytesToSystemBytes(const uint32 *,const size);
+EXPORT_DLL uint32 *losSystemBytesToNetworkBytes(const uint32 *, const size);
+EXPORT_DLL int32 *losNetworkBytesToSystemBytesSigned(const int32 *,const size);
+EXPORT_DLL int32 *losSystemBytesToNetworkBytesSigned(const int32 *, const size);
 
 EXPORT_DLL losResult losCreateSocket(losSocket *, const losCreateSocketInfo &);
 EXPORT_DLL losResult losReadSocket(losSocket, void *, size *);

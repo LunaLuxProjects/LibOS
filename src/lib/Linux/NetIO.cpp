@@ -18,7 +18,7 @@ struct losSocket_T
     bool isTCP = false;
 };
 
-void *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
+uint32 *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
 {
     std::vector<uint32> bytes;
     bytes.reserve(data_size);
@@ -27,9 +27,27 @@ void *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
     return std::move(bytes.data());
 }
 
-void *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
+uint32 *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
 {
     std::vector<uint32> bytes;
+    bytes.reserve(data_size);
+    for (size i = 0; i < data_size; i++)
+        bytes.emplace_back(htonl(data[i]));
+    return std::move(bytes.data());
+}
+
+int32 *losNetworkBytesToSystemBytesSigned(const int32 *data, const size data_size)
+{
+    std::vector<int32> bytes;
+    bytes.reserve(data_size);
+    for (size i = 0; i < data_size; i++)
+        bytes.emplace_back(ntohl(data[i]));
+    return std::move(bytes.data());
+}
+
+int32 *losSystemBytesToNetworkBytesSigned(const int32 *data, const size data_size)
+{
+    std::vector<int32> bytes;
     bytes.reserve(data_size);
     for (size i = 0; i < data_size; i++)
         bytes.emplace_back(htonl(data[i]));
@@ -39,13 +57,15 @@ void *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
 losResult tellError()
 {
     perror("system error");
-    return LOS_SUCCESS;
+    return LOS_NET_IO_CONNECTION_REFUSED;
 }
 
 losResult losCreateSocket(losSocket *socket_in, const losCreateSocketInfo &socket_info)
 {
+    /* FIXME: this check should stop reusing handles already in use
     if (!(*socket_in))
         return LOS_ERROR_HANDLE_IN_USE;
+    */
 
     *socket_in = new losSocket_T();
     switch (socket_info.socketBits)
@@ -136,10 +156,13 @@ losResult losListenSocket(const losCreateSocketServerListenInfo &)
 
 losResult losDestorySocket(losSocket socket)
 {
-    if (shutdown(socket->ConnectSocket, SHUT_RDWR) < 0)
+    if(socket->isTCP)
     {
-        close(socket->ConnectSocket);
-        return tellError();
+        if (shutdown(socket->ConnectSocket, SHUT_RDWR) < 0)
+        {
+            close(socket->ConnectSocket);
+            return tellError();
+        }
     }
     close(socket->ConnectSocket);
     return LOS_SUCCESS;

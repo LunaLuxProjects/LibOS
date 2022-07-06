@@ -8,6 +8,7 @@
 
 struct refHandle_T
 {
+    losWindow *window;
     VmaAllocator vulkan_allocator;
     VkInstance instance;
     VkSurfaceKHR surface;

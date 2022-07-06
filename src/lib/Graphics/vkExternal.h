@@ -32,11 +32,16 @@
 #endif
 #if CMAKE_SYSTEM_NUMBER == 0
 #include "../Linux/Window.h"
+#include <wayland-client.h>
+#include <xcb/xcb.h>
 #include <vulkan/vulkan_wayland.h>
-#define VK_KHR_WSI_SURFACE_EXTENSION_NAME VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME
+#include <vulkan/vulkan_xcb.h>
+#define VK_KHR_WSI_SURFACE_EXTENSION_NAME_SIZE 2
+#define VK_KHR_WSI_SURFACE_EXTENSION_NAME VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,VK_KHR_XCB_SURFACE_EXTENSION_NAME
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1
 #include "../Windows/Window.h"
 #include <vulkan/vulkan_win32.h>
+#define VK_KHR_WSI_SURFACE_EXTENSION_NAME_SIZE 1
 #define VK_KHR_WSI_SURFACE_EXTENSION_NAME VK_KHR_WIN32_SURFACE_EXTENSION_NAME
 #endif

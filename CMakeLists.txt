@@ -21,6 +21,8 @@ endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     find_package(Wayland REQUIRED)
+    FIND_PACKAGE(X11 REQUIRED)
+    include_directories(${X11_INCLUDE_DIR})
     include_directories(${WAYLAND_INCLUDE_DIR})
     set(CMAKE_SYSTEM_NUMBER 0)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -36,6 +38,7 @@ find_package(OpenAL CONFIG REQUIRED)
 find_package(FreeALUT CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(unofficial-vulkan-memory-allocator CONFIG REQUIRED)
+
 if(${BUILD_OF_JNI})
   find_package(JNI REQUIRED)
   if(!${JNI_FOUND})
@@ -71,12 +74,16 @@ set(sources src/lib/FileIO.cpp
     src/lib/Linux/NetIO.cpp
 
     # linux
+    src/lib/Linux/Window/Wayland.cpp
+    src/lib/Linux/Window/Xcb.cpp
+    src/lib/Linux/Window/DirectScreen.cpp
     src/lib/Linux/Window.cpp
     src/lib/Linux/Panic.cpp)
 
 if(${BUILD_OF_JNI})
   set(sources ${sources}
   src/lib/Jni/FileIO.cpp
+  src/lib/Jni/NetIO.cpp
   )
 endif()
 
@@ -110,7 +117,7 @@ if(${BUILD_OF_JNI})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  set(LINK_LIBS ${LINK_LIBS} ${WAYLAND_LIBRARIES})
+  set(LINK_LIBS ${LINK_LIBS} ${WAYLAND_LIBRARIES} ${X11_xcb_LIB} ${X11_LIBRARIES})
 endif()
 
 target_link_libraries(libos PRIVATE ${LINK_LIBS}) 

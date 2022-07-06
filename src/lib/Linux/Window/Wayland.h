@@ -1,0 +1,42 @@
+#pragma once
+#include "../../Cmake.h"
+#if CMAKE_SYSTEM_NUMBER == 0
+#    include "LinuxWindow.h"
+#    include "xdg-shell-client-protocol.h"
+#    include <Components/Defines.h>
+
+class WaylandWindow : public LinuxWindow
+{
+    wl_display *display;
+    wl_registry *registry;
+    wl_compositor *compositor;
+    xdg_wm_base *xdg_shell;
+    wl_surface *surface;
+    xdg_surface *xdg_win_surface;
+    xdg_toplevel *xdg_top_level;
+    wl_seat *seat;
+    wl_pointer *pointer;
+    wl_keyboard *keyboard;
+
+  public:
+    explicit WaylandWindow(const char *title, losSize win_size);
+    virtual uint8 getPlatform() const noexcept final override;
+    virtual losResult losCreateKeyboard() noexcept final override;
+    virtual losResult losCreateMouse() noexcept final override;
+    virtual losResult losCreateTouch() noexcept final override;
+    virtual bool hasWindowClosed() const noexcept final override;
+    virtual losResult losUpdateWindow() noexcept final override;
+    virtual bool losIsKeyDown(losKeyboardButton) const noexcept final override;
+    virtual bool losIsMouseDown(losMouseButton) const noexcept final override;
+    virtual losResult losRequestClose() noexcept final override;
+    virtual losPosition losRequestMousePosition() noexcept final override;
+    virtual losPosition losRequestMouseWheelDelta() noexcept final override;
+    virtual losPosition losIsBeingPressed() const noexcept final override;
+    virtual losResult losDestroyKeyboard() noexcept final override;
+    virtual losResult losDestroyMouse() noexcept final override;
+    virtual losResult losDestroyTouch() noexcept final override;
+    virtual losResult losDestroyWindow() noexcept final override;
+
+    losResult losCreateVulkanSurface(refHandle handle) noexcept final override;
+};
+#endif
