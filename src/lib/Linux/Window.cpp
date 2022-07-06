@@ -10,8 +10,10 @@
 
 losResult losCreateWindow(losWindow *window, losWindowInfo &info)
 {
+    /* FIXME: this check should stop reusing handles already in use
     if (!(*window))
         return LOS_ERROR_HANDLE_IN_USE;
+    */
     (*window) =  new losWindow_T();
 
     if(info.is_compositeServer)
