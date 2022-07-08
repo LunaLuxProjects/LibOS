@@ -39,6 +39,7 @@ losResult losCreateWindow(losWindow *window, losWindowInfo &info)
         try
         {
             (*window)->window = new XcbWindow(info.title, info.window_size);
+            printf("LibOS - Window Info: %s\n", "WaylandWindow failed to initialize failing back to XcbWindow");
         }
         catch(const std::exception& e)
         {

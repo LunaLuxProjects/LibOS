@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <json/json.h>
+#include "VulkanPipline.hpp"
 
 losResult readFile(const std::string path,void** data,size* d_size)
 {

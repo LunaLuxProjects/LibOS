@@ -52,7 +52,7 @@ typedef struct refCreateGraphicContextInfo
 {
     refSampleCount sample_count = REF_SAMPLE_COUNT_1;
     bool has_depth_stencil = false;
-
+    bool find_best_device = true;
 } refCreateGraphicContextInfo;
 
 EXPORT_DLL losResult refAppendGraphicsContext(refHandle,losWindow,const refCreateGraphicContextInfo&) noexcept;

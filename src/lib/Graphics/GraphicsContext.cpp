@@ -334,6 +334,11 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         std::vector<VkPhysicalDevice> devices;
         devices.resize(p_count);
         VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, devices.data()),LOS_ERROR_COULD_NOT_INIT)
+        [[unlikely]]if(devices.empty())
+        {
+            printf("LIB OS: Vulkan ERROR: %s\n","No Vulkan Device Found");
+            return LOS_ERROR_COULD_NOT_INIT;
+        }
         [[likely]]if(devices.size() == 1)
         {
             printf("LIB OS: Vulkan Info: %s\n","We only found one physical device!"); 
@@ -349,39 +354,44 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         }
         else
         {
-            std::vector<VkPhysicalDevice> best_devices;
-            {
-                std::vector<VkPhysicalDevice> supported_devices;
-                {
-                    for(auto& dev: devices)
-                    {
-                        VkBool32 profile_supported;
-                        result = vpGetPhysicalDeviceProfileSupport(handle->instance,dev, &profile_properties, &profile_supported);
-                        if (profile_supported)
-                            supported_devices.emplace_back(dev);
-                    }
-                    if(supported_devices.empty())
-                    {
-                        printf("LIB OS: Vulkan ERROR: %s\n","No Device Has Required Profile Not Supported");
-                        return LOS_ERROR_COULD_NOT_INIT;
-                    }
-                }
-                devices.clear();
-                for(auto& dev: supported_devices)
-                {
-                    VkPhysicalDeviceProperties device_properties;
-                    vkGetPhysicalDeviceProperties(dev,&device_properties);
-                    if(device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-                        best_devices.emplace_back(dev);
-                }
-                supported_devices.clear();
-            }
-            if(best_devices.size() <= 2)
-                handle->physical = best_devices[0];
+            if(!info.find_best_device)
+                handle->physical = devices[0];
             else
             {
-                printf("LIBOS vulkan ERROR: %s\n","Multiple Best fitting devices found but lib dose not support finding the best matching yet");
-                return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
+                std::vector<VkPhysicalDevice> best_devices;
+                {
+                    std::vector<VkPhysicalDevice> supported_devices;
+                    {
+                        for(auto& dev: devices)
+                        {
+                            VkBool32 profile_supported;
+                            result = vpGetPhysicalDeviceProfileSupport(handle->instance,dev, &profile_properties, &profile_supported);
+                            if (profile_supported)
+                                supported_devices.emplace_back(dev);
+                        }
+                        [[unlikely]]if(supported_devices.empty())
+                        {
+                            printf("LIB OS: Vulkan ERROR: %s\n","No Device Has Required Profile Not Supported");
+                            return LOS_ERROR_COULD_NOT_INIT;
+                        }
+                    }
+                    devices.clear();
+                    for(auto& dev: supported_devices)
+                    {
+                        VkPhysicalDeviceProperties device_properties;
+                        vkGetPhysicalDeviceProperties(dev,&device_properties);
+                        if(device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                            best_devices.emplace_back(dev);
+                    }
+                    supported_devices.clear();
+                }
+                [[likely]]if(best_devices.size() <= 2)
+                    handle->physical = best_devices[0];
+                else
+                {
+                    printf("LIBOS vulkan ERROR: %s\n","Multiple Best fitting devices found but lib dose not support finding the best matching yet");
+                    return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
+                }
             }
         }
 

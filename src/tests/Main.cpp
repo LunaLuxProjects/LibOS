@@ -83,6 +83,7 @@ int main()
         TEST(losCreateKeyboard(window));
         TEST(losCreateMouse(window));
         refCreateGraphicContextInfo g_info;
+        g_info.find_best_device = false;
         TEST(refAppendGraphicsContext(handle, window, g_info));
         TEST(refCreateCommandBuffer(handle, &buffer));
         refCreateShaderProgramInfo shader_info;
@@ -97,10 +98,10 @@ int main()
             if (losIsKeyDown(window, LOS_KEYBOARD_X))
                 losRequestClose(window);
             TEST(refBeginCommands(handle, buffer));
-            const float32 colour[4]{1.0f, 1.0f, 0.0f, 0.0f};
+            const float32 colour[4]{0.0f, 0.0f, 0.0f, 0.0f};
             TEST(refCmdBeginDrawing(handle, buffer, nullptr, colour));
-            TEST(refCmdBindShaderProgram(handle, buffer, program));
-            TEST(refCmdDraw(handle, buffer, 3, 1, 0, 0));
+            //TEST(refCmdBindShaderProgram(handle, buffer, program));
+            //TEST(refCmdDraw(handle, buffer, 3, 1, 0, 0));
             TEST(refCmdEndDrawing(handle, buffer));
             TEST(refEndCommands(handle, buffer));
             TEST(refExecuteCommands(handle, buffer, true));
