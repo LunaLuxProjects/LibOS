@@ -31,7 +31,6 @@
 #pragma warning( pop )
 #endif
 #if CMAKE_SYSTEM_NUMBER == 0
-#include "../Linux/Window.h"
 #include <wayland-client.h>
 #include <xcb/xcb.h>
 #include <vulkan/vulkan_wayland.h>

@@ -1,5 +1,5 @@
-#include "../IFileIO.h"
-#include "../InternalRefractile.h"
+#include "../IFileIO.hpp"
+#include "../InternalRefractile.hpp"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>

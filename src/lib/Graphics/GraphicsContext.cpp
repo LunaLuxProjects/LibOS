@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "Share.h"
+#include "Share.hpp"
 
 #define PROFILE_NAME VP_LUNARG_DESKTOP_PORTABILITY_2021_NAME
 #define PROFILE_SPEC_VERSION VP_LUNARG_DESKTOP_PORTABILITY_2021_SPEC_VERSION
@@ -338,20 +338,51 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         {
             printf("LIB OS: Vulkan Info: %s\n","We only found one physical device!"); 
             VkBool32 profile_supported;
-            VkPhysicalDeviceProperties info;
             result = vpGetPhysicalDeviceProfileSupport(handle->instance,devices[0], &profile_properties, &profile_supported);
-            vkGetPhysicalDeviceProperties(devices[0], &info);
-
             if (!profile_supported)
             {
+                VkPhysicalDeviceProperties info;
+                vkGetPhysicalDeviceProperties(devices[0], &info);
                 printf("LIB OS: Vulkan WARNING: Device - %s | %s\n",info.deviceName,"Device Required Profile Not Supported"); 
             }
             handle->physical = devices[0];
         }
         else
         {
-            printf("LIB OS: Vulkan Error: %s\n", "Multi GPU Not Implied yet"); 
-            return LOS_ERROR_COULD_NOT_INIT;
+            std::vector<VkPhysicalDevice> best_devices;
+            {
+                std::vector<VkPhysicalDevice> supported_devices;
+                {
+                    for(auto& dev: devices)
+                    {
+                        VkBool32 profile_supported;
+                        result = vpGetPhysicalDeviceProfileSupport(handle->instance,dev, &profile_properties, &profile_supported);
+                        if (profile_supported)
+                            supported_devices.emplace_back(dev);
+                    }
+                    if(supported_devices.empty())
+                    {
+                        printf("LIB OS: Vulkan ERROR: %s\n","No Device Has Required Profile Not Supported");
+                        return LOS_ERROR_COULD_NOT_INIT;
+                    }
+                }
+                devices.clear();
+                for(auto& dev: supported_devices)
+                {
+                    VkPhysicalDeviceProperties device_properties;
+                    vkGetPhysicalDeviceProperties(dev,&device_properties);
+                    if(device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                        best_devices.emplace_back(dev);
+                }
+                supported_devices.clear();
+            }
+            if(best_devices.size() <= 2)
+                handle->physical = best_devices[0];
+            else
+            {
+                printf("LIBOS vulkan ERROR: %s\n","Multiple Best fitting devices found but lib dose not support finding the best matching yet");
+                return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
+            }
         }
 
         VkBool32 support{false};

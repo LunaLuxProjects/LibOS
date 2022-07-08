@@ -1,14 +1,14 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.h"
-#    include "../../InternalRefractile.h"
-#    include "Xcb.h"
+#    include "../../Graphics/vkExternal.hpp"
+#    include "../../InternalRefractile.hpp"
+#    include "Xcb.hpp"
 #    include <cstdlib>
 #    include <cstring>
 
-uint8 XcbWindow::getPlatform() const noexcept
+LinuxWindowPlatform XcbWindow::getPlatform() const noexcept
 {
-    return XCB_WINDOW;
+    return LinuxWindowPlatform::XCB_LIB_WINDOW;
 }
 
 XcbWindow::XcbWindow(const char *title, losSize win_size)
@@ -41,8 +41,9 @@ XcbWindow::XcbWindow(const char *title, losSize win_size)
 
     /* Map the window on the screen */
     xcb_map_window(con, win);
+    xcb_screen_t* screen = xcb_setup_roots_iterator(xcb_get_setup(con)).data;
 
-    const uint32_t coords[] = {100, 100};
+    const uint32_t coords[] = {(static_cast<uint32_t>(screen->width_in_pixels) / 3), (static_cast<uint32_t>(screen->height_in_pixels) / 4)};
     xcb_configure_window(con, win, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, coords);
     /* Make sure commands are sent before we pause, so window is shown */
     xcb_flush(con);

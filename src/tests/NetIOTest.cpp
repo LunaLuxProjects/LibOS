@@ -1,4 +1,5 @@
 #include "NetIOTest.h"
+#include <Components/NetIO.h>
 #include <string>
 #define TEST(File_Bits, Path,Port, Test_Func)                       \
     {                                                          \

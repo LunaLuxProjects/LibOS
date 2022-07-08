@@ -1,7 +1,11 @@
 #pragma once
 #include <RefractileAPI.h>
-#include "../InternalRefractile.h"
+#include "../InternalRefractile.hpp"
+#include "../Cmake.h"
 #include <thread>
+#if CMAKE_SYSTEM_NUMBER == 0
+#include "../Linux/Window.hpp"
+#endif
 
 struct LayoutObject
 {

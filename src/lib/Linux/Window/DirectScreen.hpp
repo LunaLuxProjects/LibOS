@@ -1,26 +1,14 @@
 #pragma once
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "LinuxWindow.h"
-#    include "xdg-shell-client-protocol.h"
+#    include "LinuxWindow.hpp"
 #    include <Components/Defines.h>
 
-class WaylandWindow : public LinuxWindow
+class DirectScreen : public LinuxWindow
 {
-    wl_display *display;
-    wl_registry *registry;
-    wl_compositor *compositor;
-    xdg_wm_base *xdg_shell;
-    wl_surface *surface;
-    xdg_surface *xdg_win_surface;
-    xdg_toplevel *xdg_top_level;
-    wl_seat *seat;
-    wl_pointer *pointer;
-    wl_keyboard *keyboard;
-
   public:
-    explicit WaylandWindow(const char *title, losSize win_size);
-    virtual uint8 getPlatform() const noexcept final override;
+    explicit DirectScreen(const char *title, losSize win_size);
+    virtual LinuxWindowPlatform getPlatform() const noexcept final override;
     virtual losResult losCreateKeyboard() noexcept final override;
     virtual losResult losCreateMouse() noexcept final override;
     virtual losResult losCreateTouch() noexcept final override;

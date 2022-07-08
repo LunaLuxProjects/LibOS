@@ -1,9 +1,9 @@
 #include "../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#include "Window.h"
-#include "Window/Wayland.h"
-#include "Window/Xcb.h"
-#include "Window/DirectScreen.h"
+#include "Window.hpp"
+#include "Window/Wayland.hpp"
+#include "Window/Xcb.hpp"
+#include "Window/DirectScreen.hpp"
 #include <Components/Defines.h>
 #include <Components/Window.h>
 #include <stdexcept>

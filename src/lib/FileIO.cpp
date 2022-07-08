@@ -1,18 +1,19 @@
-#include "IFileIO.h"
+#include "Cmake.h"
+#include "IFileIO.hpp"
 #include <Components/FileIO.h>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
-#ifdef linux
-#    include "Linux/FileIO.h"
+#if CMAKE_SYSTEM_NUMBER == 0
+#    include "Linux/Linux.hpp"
 #endif
-#ifdef WIN32
-#    include "Windows/FileIO.h"
+#if CMAKE_SYSTEM_NUMBER == 1
+#    include "Windows/Windows.hpp"
 #endif
 std::string asset_path = "NOT_SET";
 
-losResult losSetAssetPath(const char* path)
+losResult losSetAssetPath(const char *path)
 {
     asset_path = path;
     return LOS_SUCCESS;
@@ -37,7 +38,7 @@ std::vector<std::string> split(std::string s, const char delimiter)
     return tokens;
 }
 
-std::string getCorrectPath(const char* path)
+std::string getCorrectPath(const char *path)
 {
     std::string ret_path;
     auto path_tokens = split(std::move(path), '/');
@@ -53,18 +54,13 @@ std::string getCorrectPath(const char* path)
             if (command == "binary_base")
             {
                 std::string path_os;
-#ifdef WIN32
-                path_os = std::move(winGetCurrentPath());
-#endif
-#ifdef linux
-                path_os = linuxGetCurrentPath();
-#endif
+                path_os = std::move(getCurrentPath());
                 auto sun_tuk = split(std::move(path_os), '/');
-#ifdef WIN32
-                for (size i = 0; i < sun_tuk.size() - 1; i++)
-#endif
-#ifdef linux
+#if CMAKE_SYSTEM_NUMBER == 0
                 for (size i = 0; i < sun_tuk.size(); i++)
+#endif
+#if CMAKE_SYSTEM_NUMBER == 1
+                for (size i = 0; i < sun_tuk.size() - 1; i++)
 #endif
                     ret_path += (sun_tuk[i] += "/");
             }

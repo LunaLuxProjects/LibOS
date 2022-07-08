@@ -1,4 +1,4 @@
-#include "Share.h"
+#include "Share.hpp"
 #include <Components/FileIO.h>
 #include <string>
 #include <vector>
@@ -236,8 +236,10 @@ losResult jsonToLayoutShaderObject(const Json::Value base,LayoutObject** program
 losResult refCreateShaderProgram(refHandle handle, refShaderProgram * program, refCreateShaderProgramInfo & info)
 {
     VkResult result;
+    /* FIXME: this check should stop reusing handles already in use
     if (!(*program))
         return LOS_ERROR_HANDLE_IN_USE;
+    */
     *program = new refShaderProgram_T();
     losResult res;
     void* shader_settings;

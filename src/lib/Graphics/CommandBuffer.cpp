@@ -1,4 +1,4 @@
-#include "Share.h"
+#include "Share.hpp"
 
 inline bool threadCheck(refCommandBuffer& handle) noexcept
 {
@@ -10,8 +10,10 @@ inline bool threadCheck(refCommandBuffer& handle) noexcept
 losResult refCreateCommandBuffer(refHandle handle, refCommandBuffer * buffer)
 {
     VkResult result;
+    /* FIXME: this check should stop reusing handles already in use
     if (!(*buffer))
         return LOS_ERROR_HANDLE_IN_USE;
+    */
     *buffer = new refCommandBuffer_T();
     (*buffer)->creator = std::this_thread::get_id();
 	VkCommandPoolCreateInfo commandPoolInfo = {};

@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMake_Modules)
 
 #options
 option(USE_SANATIZER ON)
-set(BUILD_OF_JNI ON)
+set(BUILD_OF_JNI OFF)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_COMPILER_NUMBER 0)
@@ -65,20 +65,17 @@ set(sources src/lib/FileIO.cpp
 
     # windows
     src/lib/Windows/FileIO.cpp
-    src/lib/Windows/NetIO.cpp
     src/lib/Windows/Window.cpp
-    src/lib/Windows/Panic.cpp
 
     # posix
-    src/lib/Linux/FileIO.cpp
-    src/lib/Linux/NetIO.cpp
+    src/lib/Posix/FileIO.cpp
+    src/lib/Posix/NetIO.cpp
 
     # linux
     src/lib/Linux/Window/Wayland.cpp
     src/lib/Linux/Window/Xcb.cpp
     src/lib/Linux/Window/DirectScreen.cpp
-    src/lib/Linux/Window.cpp
-    src/lib/Linux/Panic.cpp)
+    src/lib/Linux/Window.cpp)
 
 if(${BUILD_OF_JNI})
   set(sources ${sources}

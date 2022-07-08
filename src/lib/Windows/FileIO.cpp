@@ -1,7 +1,7 @@
 #include "../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 1
-#include "../IFileIO.h"
-#include "windows_link.h"
+#include "../IFileIO.hpp"
+#include "WindowsLink.hpp"
 #include <Components/FileIO.h>
 #include <atomic>
 
@@ -135,16 +135,5 @@ losResult losCloseFile(losFileHandle handle)
     CloseHandle(handle->fileHandle);
     delete handle;
     return LOS_SUCCESS;
-}
-
-std::string winGetCurrentPath()
-{
-    std::string path;
-    for (DWORD str_size = 0; str_size < MAX_PATH; str_size++)
-    {
-        path += " ";
-    }
-    GetModuleFileName(NULL, (LPSTR)path.c_str(), MAX_PATH);
-    return path;
 }
 #endif

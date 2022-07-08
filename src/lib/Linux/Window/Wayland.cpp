@@ -1,8 +1,8 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.h"
-#    include "../../InternalRefractile.h"
-#    include "Wayland.h"
+#    include "../../Graphics/vkExternal.hpp"
+#    include "../../InternalRefractile.hpp"
+#    include "Wayland.hpp"
 
 /*
 
@@ -83,9 +83,9 @@ const wl_registry_listener registry_listener = {
     [](void *, wl_registry *, uint32_t) {}};
 */
 
-uint8 WaylandWindow::getPlatform() const noexcept
+LinuxWindowPlatform WaylandWindow::getPlatform() const noexcept
 {
-    return WAYLAND_WINDOW;
+    return LinuxWindowPlatform::WAYLAND_WINDOW;
 };
 
 WaylandWindow::WaylandWindow(const char *title, losSize win_size)

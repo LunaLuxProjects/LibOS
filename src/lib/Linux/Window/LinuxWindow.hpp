@@ -1,20 +1,20 @@
 #pragma once
 #include <Components/Window.h>
-#include "../../Callbacks.h"
+#include "../../Callbacks.hpp"
 
-typedef enum LinuxWindowPlatform
+enum class LinuxWindowPlatform : uint8
 {
-    DIRECT_SCREEN_WINDOW,
-    WAYLAND_WINDOW,
-    XCB_WINDOW
-} LinuxWindowPlatform;
+    DIRECT_SCREEN_WINDOW = 0x00,
+    WAYLAND_WINDOW = 0x01,
+    XCB_LIB_WINDOW = 0x02,
+};
 
 class LinuxWindow
 {
     public:
     ResizeCallbackFunction resize_callback;
     requestObjectCallback object_callback;
-    virtual uint8 getPlatform() const noexcept = 0;
+    virtual LinuxWindowPlatform getPlatform() const noexcept = 0;
     virtual losResult losCreateKeyboard() noexcept = 0;
     virtual losResult losCreateMouse() noexcept = 0;
     virtual losResult losCreateTouch() noexcept = 0;

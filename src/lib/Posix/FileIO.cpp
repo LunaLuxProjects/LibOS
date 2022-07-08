@@ -1,7 +1,7 @@
 #include "../Cmake.h"
-#if CMAKE_SYSTEM_NUMBER == 0
-#include "FileIO.h"
 #include <Components/FileIO.h>
+#include "../IFileIO.hpp"
+#if CMAKE_SYSTEM_NUMBER == 0
 #include <fcntl.h>
 #include <libgen.h>
 #include <linux/limits.h>
@@ -142,10 +142,4 @@ losResult losWriteFile(losFileHandle handle, const void *data, const size data_s
     return LOS_SUCCESS;
 }
 
-std::string linuxGetCurrentPath()
-{
-    char result[4096];
-    (void)readlink("/proc/self/exe", result, 4096);
-    return dirname(result);
-}
 #endif

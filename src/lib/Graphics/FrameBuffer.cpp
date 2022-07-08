@@ -1,4 +1,4 @@
-#include "Share.h"
+#include "Share.hpp"
 
 losResult refCreateFrameBuffer(refHandle,refFrameBuffer * buffer)
 {
@@ -11,8 +11,10 @@ losResult refCreateFrameBuffer(refHandle,refFrameBuffer * buffer)
 losResult refCreateFrameBuffer(refHandle handle,refFrameBuffer * buffer,VkImageView* colour)
 {
     VkResult result;
+    /* FIXME: this check should stop reusing handles already in use
     if (!(*buffer))
         return LOS_ERROR_HANDLE_IN_USE;
+    */
     *buffer = new refFrameBuffer_T();
     VkFramebufferCreateInfo frame_buffer_info{};
     frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

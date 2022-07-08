@@ -1,4 +1,4 @@
-#include "../InternalRefractile.h"
+#include "../InternalRefractile.hpp"
 #include <AL/alut.h>
 #include <RefractileAPI.h>
 

@@ -1,22 +1,26 @@
 #pragma once
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "LinuxWindow.h"
+#    include "LinuxWindow.hpp"
+#    include "xdg-shell-client-protocol.h"
 #    include <Components/Defines.h>
-#    include <atomic>
-#    include <xcb/xcb.h>
 
-class XcbWindow : public LinuxWindow
+class WaylandWindow : public LinuxWindow
 {
-    xcb_connection_t *con;
-    xcb_window_t win;
-    xcb_screen_t *screen;
-    xcb_intern_atom_reply_t *atom_wm_delete_window;
-    std::atomic_bool shouldClose{false}, isInWindow{false}, isRest{false}, keys[256]{}, buttons[3]{};
-    std::atomic<int64> x = 0, y = 0;
+    wl_display *display;
+    wl_registry *registry;
+    wl_compositor *compositor;
+    xdg_wm_base *xdg_shell;
+    wl_surface *surface;
+    xdg_surface *xdg_win_surface;
+    xdg_toplevel *xdg_top_level;
+    wl_seat *seat;
+    wl_pointer *pointer;
+    wl_keyboard *keyboard;
+
   public:
-    explicit XcbWindow(const char *title, losSize win_size);
-    virtual uint8 getPlatform() const noexcept final override;
+    explicit WaylandWindow(const char *title, losSize win_size);
+    virtual LinuxWindowPlatform getPlatform() const noexcept final override;
     virtual losResult losCreateKeyboard() noexcept final override;
     virtual losResult losCreateMouse() noexcept final override;
     virtual losResult losCreateTouch() noexcept final override;

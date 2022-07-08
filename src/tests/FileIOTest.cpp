@@ -1,4 +1,5 @@
 #include "FileIOTest.h"
+#include <Components/FileIO.h>
 #include <string>
 #define TEST(File_Bits, Path, Test_Func)                       \
     {                                                          \

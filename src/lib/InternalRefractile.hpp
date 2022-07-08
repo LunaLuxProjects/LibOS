@@ -1,7 +1,7 @@
 #pragma once
 #include "Cmake.h"
-#include "Callbacks.h"
-#include "Graphics/vkExternal.h"
+#include "Callbacks.hpp"
+#include "Graphics/vkExternal.hpp"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <RefractileAPI.h>

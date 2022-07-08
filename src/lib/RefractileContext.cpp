@@ -1,4 +1,4 @@
-#include "InternalRefractile.h"
+#include "InternalRefractile.hpp"
 #include <RefractileAPI.h>
 
 losResult refCreateRefractileContext(refHandle *handle)

@@ -1,16 +1,16 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.h"
-#    include "DirectScreen.h"
+#    include "../../Graphics/vkExternal.hpp"
+#    include "DirectScreen.hpp"
 
-uint8 DirectScreen::getPlatform() const noexcept
+LinuxWindowPlatform DirectScreen::getPlatform() const noexcept
 {
-    return DIRECT_SCREEN_WINDOW;
+    return LinuxWindowPlatform::DIRECT_SCREEN_WINDOW;
 };
 
 DirectScreen::DirectScreen(const char *, losSize)
 {
-
+    throw std::runtime_error("DirectScreen is not implemented");
 }
 
 losResult DirectScreen::losCreateKeyboard() noexcept
