@@ -2,10 +2,6 @@
     "name": "libos",
     "version-string": "latest",
     "dependencies": [
-        "vulkan",
-        "vulkan-memory-allocator",
-        "openal-soft",
-        "freealut",
         "jsoncpp"
     ]
 }

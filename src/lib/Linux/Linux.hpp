@@ -1,3 +1,4 @@
+#pragma once
 #include "../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
 #include <Components/Defines.h>

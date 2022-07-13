@@ -146,10 +146,16 @@ typedef struct losWindowInfo
     requestObjectCallback request_callback;
 } losWindowInfo;
 
-typedef struct losPosition
+typedef struct losPositionSigned
 {
     int64 x;
     int64 y;
+} losPositionSigned;
+
+typedef struct losPosition
+{
+    uint64 x;
+    uint64 y;
 } losPosition;
 
 EXPORT_DLL losResult losCreateWindow(losWindow *, losWindowInfo &);
@@ -158,16 +164,16 @@ EXPORT_DLL losResult losCreateMouse(losWindow);
 EXPORT_DLL losResult losCreateTouch(losWindow);
 
 //the way to check if the window should close check to see if function returns "LOS_WINDOW_CLOSE"
-EXPORT_DLL losResult losUpdateWindow(losWindow);
+EXPORT_DLL losResult losUpdateWindow(losWindow) noexcept;
 //--------------------------------------------------------------------------------------------------------------------------
-EXPORT_DLL bool losIsKeyDown(losWindow, losKeyboardButton);
-EXPORT_DLL bool losIsMouseDown(losWindow, losMouseButton);
-EXPORT_DLL losResult losRequestClose(losWindow);
-EXPORT_DLL losPosition losRequestMousePosition(losWindow);
-EXPORT_DLL losPosition losRequestMouseWheelDelta(losWindow);
-EXPORT_DLL losPosition losIsBeingPressed(losWindow);
+EXPORT_DLL bool losIsKeyDown(losWindow, losKeyboardButton) noexcept;
+EXPORT_DLL bool losIsMouseDown(losWindow, losMouseButton) noexcept;
+EXPORT_DLL losResult losRequestClose(losWindow) noexcept;
+EXPORT_DLL losPosition losRequestMousePosition(losWindow) noexcept;
+EXPORT_DLL losPosition losRequestMouseWheelDelta(losWindow) noexcept;
+EXPORT_DLL losPosition losIsBeingPressed(losWindow) noexcept;
 
-EXPORT_DLL losResult losDestroyKeyboard(losWindow);
-EXPORT_DLL losResult losDestroyMouse(losWindow);
-EXPORT_DLL losResult losDestroyTouch(losWindow);
-EXPORT_DLL losResult losDestroyWindow(losWindow);
+EXPORT_DLL void losDestroyKeyboard(losWindow) noexcept;
+EXPORT_DLL void losDestroyMouse(losWindow) noexcept;
+EXPORT_DLL void losDestroyTouch(losWindow) noexcept;
+EXPORT_DLL void losDestroyWindow(losWindow) noexcept;

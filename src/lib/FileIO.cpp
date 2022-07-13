@@ -8,7 +8,7 @@
 #if CMAKE_SYSTEM_NUMBER == 0
 #    include "Linux/Linux.hpp"
 #endif
-#if CMAKE_SYSTEM_NUMBER == 1
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
 #    include "Windows/Windows.hpp"
 #endif
 std::string asset_path = "NOT_SET";
@@ -44,7 +44,7 @@ std::string getCorrectPath(const char *path)
     auto path_tokens = split(std::move(path), '/');
     for (auto &tokens : path_tokens)
     {
-        if (tokens.starts_with('$'))
+        if (tokens[0] == '$')
         {
             std::string command;
             {
@@ -59,7 +59,7 @@ std::string getCorrectPath(const char *path)
 #if CMAKE_SYSTEM_NUMBER == 0
                 for (size i = 0; i < sun_tuk.size(); i++)
 #endif
-#if CMAKE_SYSTEM_NUMBER == 1
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
                 for (size i = 0; i < sun_tuk.size() - 1; i++)
 #endif
                     ret_path += (sun_tuk[i] += "/");

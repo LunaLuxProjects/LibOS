@@ -1,18 +1,16 @@
 #include "../Cmake.h"
-#if CMAKE_SYSTEM_NUMBER == 1
+#if  CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
 #include <Components/Defines.h>
 #include <cstdio>
 #include <cstdlib>
-#include "WindowsLink.hpp"
+#include <string>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
-inline std::string getCurrentPath()
+inline const std::string getCurrentPath()
 {
-    std::string path;
-    for (DWORD str_size = 0; str_size < MAX_PATH; str_size++)
-    {
-        path += " ";
-    }
-    GetModuleFileName(NULL, (LPSTR)path.c_str(), MAX_PATH);
+    std::string path = new char[260];
+    GetModuleFileNameA(NULL, (LPSTR)path.c_str(), 260);
     return path;
 }
 

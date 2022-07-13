@@ -7,8 +7,7 @@ losResult refCreateRefractileContext(refHandle *handle)
     return LOS_SUCCESS;
 }
 
-losResult refDestroyRefractileContext(refHandle handle)
+void refDestroyRefractileContext(refHandle handle) noexcept
 {
     delete handle;
-    return LOS_SUCCESS;
 }

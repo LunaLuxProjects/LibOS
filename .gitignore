@@ -1,6 +1,11 @@
 debug-windows
+debug-windows-store
 debug-linux
 build
 debug-osx
 vcpkg_installed
 src/lib/Cmake.h
+.vs
+.vscode
+.idea
+base

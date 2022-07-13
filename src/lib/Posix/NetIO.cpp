@@ -3,30 +3,32 @@
 #include <Components/NetIO.h>
 #include <vector>
 #if CMAKE_SYSTEM_NUMBER == 0
-#include <arpa/inet.h>
-#include <cstdio>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#define _ConnectSocket int32 ConnectSocket = 0;
+#    include <arpa/inet.h>
+#    include <cstdio>
+#    include <netdb.h>
+#    include <sys/socket.h>
+#    include <unistd.h>
+#    define _ConnectSocket int32 ConnectSocket = 0
 
 losResult tellError()
 {
     perror("system error");
     return LOS_NET_IO_CONNECTION_REFUSED;
 }
-#define preLoad(x)
-#define sFree close
-#undef SHUT_RDWR
-#define SHUT_RDWR 2
+#    define preLoad(x)
+#    define sFree close
+#    undef SHUT_RDWR
+#    define SHUT_RDWR 2
 #endif
-#if CMAKE_SYSTEM_NUMBER == 1
-#pragma comment(lib, "Ws2_32.lib")
-#include "../Windows/WindowsLink.hpp"
-#include <iphlpapi.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#define _ConnectSocket SOCKET ConnectSocket = INVALID_SOCKET;
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
+#    pragma comment(lib, "Ws2_32.lib")
+#    define _WINSOCK_DEPRECATED_NO_WARNINGS 1
+#    define WIN32_LEAN_AND_MEAN
+#    include <windows.h>
+#    include <iphlpapi.h>
+#    include <winsock2.h>
+#    include <ws2tcpip.h>
+#    define _ConnectSocket SOCKET ConnectSocket = INVALID_SOCKET
 
 const losResult isLoaded(const bool clear)
 {
@@ -65,16 +67,17 @@ losResult tellError()
     }
 }
 
-#define preLoad(x) if (isLoaded(x) != LOS_SUCCESS) return LOS_ERROR_COULD_NOT_INIT;
-#define sFree closesocket
-#define SHUT_RDWR SD_SEND
+#    define preLoad(x)                  \
+        if (isLoaded(x) != LOS_SUCCESS) \
+            return LOS_ERROR_COULD_NOT_INIT;
+#    define sFree closesocket
+#    define SHUT_RDWR SD_SEND
 #endif
-
 
 struct losSocket_T
 {
-    _ConnectSocket
-    struct sockaddr_in server_address;
+    _ConnectSocket;
+    struct sockaddr_in server_address = {};
     int server_address_size = 0;
     bool isServer = false;
     bool isTCP = false;
@@ -171,7 +174,10 @@ losResult losCreateSocket(losSocket *socket_in, const losCreateSocketInfo &socke
 
     return LOS_SUCCESS;
 }
-
+#if CMAKE_COMPILER_NUMBER == 2
+#    pragma warning(push)
+#    pragma warning(disable : 4244)
+#endif
 losResult losReadSocket(losSocket socket, void *data, size *data_size)
 {
     preLoad(false);
@@ -205,6 +211,9 @@ losResult losWriteSocket(losSocket socket, const void *data, const size data_siz
     }
     return LOS_SUCCESS;
 }
+#if CMAKE_COMPILER_NUMBER == 2
+#    pragma warning(pop)
+#endif
 
 losResult losListenSocket(const losCreateSocketServerListenInfo &)
 {
@@ -214,7 +223,7 @@ losResult losListenSocket(const losCreateSocketServerListenInfo &)
 
 losResult losDestorySocket(losSocket socket)
 {
-    if(socket->isTCP)
+    if (socket->isTCP)
     {
         if (shutdown(socket->ConnectSocket, SHUT_RDWR) < 0)
         {

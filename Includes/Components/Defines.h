@@ -7,7 +7,7 @@
 
 typedef unsigned char uint8;
 typedef unsigned short uint16;
-typedef uint16 losUnicode;
+typedef unsigned short unicode;
 typedef unsigned int uint32;
 typedef unsigned long uint64;
 typedef unsigned long long size;
@@ -23,7 +23,10 @@ typedef double float64;
 
 #define DEFINE_HANDLE(object) typedef struct object##_T *object;
 
+EXPORT_DLL void libOSInit();
 EXPORT_DLL void lib_panic(const char*);
+EXPORT_DLL void libOSCleanUp();
+
 #define prog_panic(x) lib_panic(x)
 
 typedef struct losSize
