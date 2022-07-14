@@ -2,6 +2,8 @@
 #include <Components/Window.h>
 #include <RefractileAPI.h>
 #include <memory>
+
+//platform types
 enum class AbstractWindowPlatform : uint8
 {
     DIRECT_SCREEN_WINDOW = 0x00,
@@ -11,6 +13,7 @@ enum class AbstractWindowPlatform : uint8
     WIN32_WINDOW = 0x04,
 };
 
+// this is just a base class to act as a lite abstraction layer
 class AbstractWindow
 {
     protected:
