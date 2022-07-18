@@ -16,8 +16,17 @@ else()
     message(FATAL_ERROR "compiler not supported")
 endif()
 
-# add non auto includes here
-include_directories(${PROJECT_SOURCE_DIR}/Includes)
+#platform independent code
+set(LibOS_Source
+        # other
+        src/lib/FileIO.cpp
+        # Interface
+        src/lib/Interface/Cpp/GraphicsContext.cpp
+        src/lib/Interface/Cpp/AudioManager.cpp
+        src/lib/Interface/Cpp/Window.cpp
+        src/lib/Interface/Cpp/Main.cpp)
+
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(CMAKE_SYSTEM_NUMBER 0)
     message(INFO " - building for Linux....")
@@ -39,4 +48,7 @@ set(tests_sources src/tests/Main.cpp
     src/tests/FileIOTest.cpp
     src/tests/NetIOTest.cpp)
 add_executable(LibOSTests ${tests_sources})
+target_include_directories(LibOSTests PRIVATE ${PROJECT_SOURCE_DIR}/Includes)
+#target_compile_options(LibOSTests PRIVATE -Wall -Wextra -Wpedantic -Werror -g -fsanitize=undefined,address -fstack-protector-all -fno-omit-frame-pointer)
+#target_link_options(LibOSTests PRIVATE -fsanitize=undefined,address -fstack-protector-all -fno-omit-frame-pointer)
 target_link_libraries(LibOSTests libos)

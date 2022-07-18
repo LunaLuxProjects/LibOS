@@ -3,8 +3,7 @@
 #ifndef XDG_SHELL_CLIENT_PROTOCOL_H
 #define XDG_SHELL_CLIENT_PROTOCOL_H
 
-#include <stdint.h>
-#include <stddef.h>
+#include <lstd/ClibLink.h>
 #include <wayland-client.h>
 
 #ifdef  __cplusplus

@@ -1,6 +1,5 @@
-#include <RefractileAPI.h>
+#include <libos/RefractileAPI.h>
 #include "../../Cmake.h"
-#include "../../InternalRefractile.hpp"
 #include "../../Interface/Headers/StructsDefines.hpp"
 #if CMAKE_SYSTEM_NUMBER == 0
 #    include "../../Linux/Audio/ALSAAudioManager.hpp"
@@ -11,8 +10,9 @@
 #if CMAKE_SYSTEM_NUMBER == 2
 #    include "../../Windows/Audio/Win32AudioManager.hpp"
 #endif
+#include <stdexcept>
 
-losResult refAppendAudioContext(refHandle handle, size * dev_count) noexcept
+losResult refAppendAudioContext(refHandle handle, data_size * dev_count) noexcept
 {
     if (handle->using_audio_system)
         return LOS_ERROR_HANDLE_IN_USE;
@@ -26,13 +26,13 @@ void refUnAppendAudioContext(refHandle handle) noexcept
     handle->using_audio_system = false;
 }
 
-losResult refGetAudioDeviceProperties(const size dev, refAudioDeviceProperties* prop) noexcept
+losResult refGetAudioDeviceProperties(const data_size dev, refAudioDeviceProperties* prop) noexcept
 {
     GET_DEVICE_PROPERTIES(dev,prop);
     return LOS_SUCCESS;
 }
 
-losResult refRetreveSystemAudioDevice(refAudioDevice *dev, const size dev_index)
+losResult refRetreveSystemAudioDevice(refAudioDevice *dev, const data_size dev_index)
 {
     /* FIXME: this check should stop reusing handles already in use
     if (!(*dev))

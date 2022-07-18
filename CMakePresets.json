@@ -19,13 +19,8 @@
             "inherits": ["base"],
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": {
-                    "type": "FILEPATH",
-                    "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-                },
                 "CMAKE_EXPORT_COMPILE_COMMANDS" : "1",
-                "CMAKE_BUILD_TYPE" : "Debug",
-                "VCPKG_BUILD_TYPE" : "Release"
+                "CMAKE_SYSTEM_NAME": "Linux"
             }
         },
         {
@@ -40,13 +35,8 @@
         "inherits": [ "base" ],
         "generator": "Visual Studio 17 2022",
         "cacheVariables": {
-          "CMAKE_TOOLCHAIN_FILE": {
-            "type": "FILEPATH",
-            "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          },
           "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
           "CMAKE_BUILD_TYPE": "Debug",
-          "VCPKG_BUILD_TYPE": "Release",
           "CMAKE_SYSTEM_NAME": "Windows"
         }
       },
@@ -56,13 +46,8 @@
         "inherits": [ "base" ],
         "generator": "Visual Studio 17 2022",
         "cacheVariables": {
-          "CMAKE_TOOLCHAIN_FILE": {
-            "type": "FILEPATH",
-            "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          },
           "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
           "CMAKE_BUILD_TYPE": "Debug",
-          "VCPKG_BUILD_TYPE": "Release",
           "CMAKE_SYSTEM_NAME": "WindowsStore",
           "CMAKE_SYSTEM_VERSION":  "10.0"
         }

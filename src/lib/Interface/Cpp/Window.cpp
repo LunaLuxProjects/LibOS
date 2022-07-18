@@ -2,6 +2,7 @@
 #include "../Headers/StructsDefines.hpp"
 #if CMAKE_SYSTEM_NUMBER == 0
 #    include "../../Linux/Window/DirectScreen.hpp"
+#    include "../../Linux/Window/Wayland.hpp"
 #    include "../../Linux/Window/Xcb.hpp"
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1

@@ -4,10 +4,7 @@ set(CMAKE_CXX_CXX_EXTENSIONS ON)
 
 configure_file(${PROJECT_SOURCE_DIR}/src/lib/Cmake.h.in ${PROJECT_SOURCE_DIR}/src/lib/Cmake.h @ONLY)
 
-set(sources 
-    # other 
-    src/lib/RefractileContext.cpp
-    src/lib/FileIO.cpp
+set(LibOS_Source ${LibOS_Source}
     # Interface
     src/lib/Interface/Cpp/AudioManager.cpp
     src/lib/Interface/Cpp/Window.cpp
@@ -19,7 +16,8 @@ set(sources
     # posix
     src/lib/Posix/NetIO.cpp)
 
-add_library(libos SHARED ${sources})
+add_library(libos SHARED ${LibOS_Source})
+target_include_directories(libos PRIVATE ${PROJECT_SOURCE_DIR}/Includes)
 
 if(MSVC)
   target_compile_options(libos PRIVATE /W4 /WX)

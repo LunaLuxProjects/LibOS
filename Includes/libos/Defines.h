@@ -4,22 +4,8 @@
 #else
 #    define EXPORT_DLL extern "C"
 #endif
+#include <lstd/DataType.h>
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned short unicode;
-typedef unsigned int uint32;
-typedef unsigned long uint64;
-typedef unsigned long long size;
-
-typedef signed char int8;
-typedef signed short int16;
-typedef signed int int32;
-typedef signed long int64;
-typedef signed long long ssize;
-
-typedef float float32;
-typedef double float64;
 
 #define DEFINE_HANDLE(object) typedef struct object##_T *object;
 
@@ -38,6 +24,7 @@ typedef struct losSize
 typedef enum losResult : uint8
 {
     LOS_SUCCESS,
+    LOS_ERROR_UNKNOWN,
     LOS_ERROR_HANDLE_IN_USE,
     LOS_ERROR_COULD_NOT_GET_CORRECT_DATA,
     LOS_ERROR_COULD_NOT_INIT,
@@ -53,5 +40,14 @@ typedef enum losResult : uint8
     // WINDOW
     LOS_WINDOW_CLOSE,
     //ThreadGuard
-    LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD
+    LOS_ERROR_TRIED_TO_ACCESS_THREAD_RESOURCES_ON_OTHER_THREAD,
+    // Graphics
+    LOS_ERROR_GRAPHICS_LOST,
+    LOS_ERROR_GRAPHICS_BACKEND_UNDEFINED_BEHAVIOR,
+    LOS_ERROR_GRAPHICS_SHADER_ERROR,
+    LOS_ERROR_GRAPHICS_MEMORY_FULL,
+    LOS_ERROR_GRAPHICS_MEMORY_CORUPTED,
+    // If You Get this error as an error this is undefined behavior as error is fix internally and user should never see this error.
+    LOS_ERROR_GRAPHICS_INTERNALLY_HANDLED_ERROR_HAPPEND, 
+    //--------------------------------------------------
 } losResult;

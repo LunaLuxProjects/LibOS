@@ -1,8 +1,8 @@
 #pragma once
-#include <Components/Window.h>
-#include <RefractileAPI.h>
+#include <libos/Window.h>
+#include <libos/RefractileAPI.h>
 #include <memory>
-
+#include "Abstracts.hpp"
 //platform types
 enum class AbstractWindowPlatform : uint8
 {
@@ -56,6 +56,6 @@ class AbstractWindow
     virtual void losDestroyTouch() noexcept {};
     virtual void losDestroyWindow() noexcept = 0;
 
-    virtual losResult losCreateWindowSurface(refHandle handle) noexcept = 0;
+    virtual losResult losCreateWindowSurface(AbstractGraphicsContext*) noexcept = 0;
     virtual ~AbstractWindow() {};
 };

@@ -1,37 +1,59 @@
 #pragma once
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#include "Graphics/vkExternal.hpp"
-#include "../../Graphics/GraphicContext.hpp"
-class VulkanContext : public GraphicsContext
+#    include "../../Interface/Headers/AbstractGraphicsContex.hpp"
+#    include "../../Interface/Headers/AbstractWindow.hpp"
+#    include "VkComponents/CVkForwardDeclare.hpp"
+#    include <libos/Window.h>
+#    include <vulkan/vulkan_core.h>
+class AbstractGraphicsContext;
+class VulkanContext : public AbstractGraphicsContext
 {
-    VmaAllocator vulkan_allocator;
-    VkInstance instance;
+    CVkInstance *instance;
+    VkPhysicalDevice physical_device;
+    CVkDevice *device;
+    CVkMemoryManager *memory_manager;
     VkSurfaceKHR surface;
-    VkSurfaceFormatKHR surface_format {VK_FORMAT_MAX_ENUM,VK_COLOR_SPACE_MAX_ENUM_KHR};
-    VkPhysicalDevice physical;
-    uint32 graphic_family_index;
-    uint32 present_family_index;
-    VkQueue graphics_queue;
-    VkQueue present_queue;
-    VkDevice device;
-    VkSwapchainKHR swap_chain;
-    std::vector<VkImage> swap_chain_images{};
-    std::vector<VkImageView> swap_chain_image_views{};
-    std::vector<refFrameBuffer> framebuffer{};
-    VkSemaphore present_semaphore;
-    VkSemaphore render_semaphore;
-    VkRenderPass pass;
-    VmaAllocation depth_image_alloc;
-    VkImage depth_image;
-    VkImageView depth_image_view;
-    ALCcontext* audio_context;
-    refSampleCount sample_count;
-    VkExtent2D current_screen_size;
-    public:
-}
+  public:
+    explicit VulkanContext() = default;
+    VulkanContext(const data_size, losWindow);
+    virtual losResult getGraphicsDeviceProperties(const data_size, refGraphicsDeviceProperties *);
+    virtual uint32 getDeviceCount() noexcept;
+    virtual bool check(int64_slow result) noexcept override final
+    {
+        if (result == VK_SUCCESS)
+            return false;
+        if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            if (getWindow()->hasWindowClosed())
+            {
+                // destroySwapchain(handle);
+                //(void)createSwapChain(handle, false);
+            }
+            return false;
+        }
+        return true;
+    }
 
-const char *getError(VkResult);
-bool check(VkResult,refHandle);
-#define VK_TEST(func,ret_val) [[unlikely]]if(check((result = func),handle)) { printf("LIB OS: Vulkan Error: %s\n", getError(result)); return ret_val;}
+    CVkInstance *getInst() const noexcept;
+    VkPhysicalDevice getPhys() const noexcept;
+    CVkDevice *getDev() const noexcept;
+    CVkMemoryManager* getMem() const noexcept;
+    VkSurfaceKHR getSurf() const noexcept
+    {
+        return surface;
+    };
+    VkSurfaceKHR *setSurf() noexcept
+    {
+        return &surface;
+    };
+    VkSwapchainKHR getSChain() const noexcept;
+
+    virtual ~VulkanContext() override final;
+};
+#    define GET_DEVICE_COUNT(x) x = VulkanContext().getDeviceCount();
+#    define GRAPHICS_CONTEXT(x, y) VulkanContext(x, y)
+#    define GET_DEVICE_PROPERTIES(dev, prop)                                       \
+        if (VulkanContext().getGraphicsDeviceProperties(dev, prop) != LOS_SUCCESS) \
+            return LOS_ERROR_HANDLE_LOSSED;
 #endif

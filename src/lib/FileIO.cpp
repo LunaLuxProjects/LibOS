@@ -1,17 +1,15 @@
 #include "Cmake.h"
 #include "IFileIO.hpp"
-#include <Components/FileIO.h>
-#include <sstream>
-#include <string>
+#include <libos/FileIO.h>
+#include <lstd/StringLexer.h>
 #include <vector>
-
 #if CMAKE_SYSTEM_NUMBER == 0
 #    include "Linux/Linux.hpp"
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
 #    include "Windows/Windows.hpp"
 #endif
-std::string asset_path = "NOT_SET";
+lstd::string asset_path = "NOT_SET";
 
 losResult losSetAssetPath(const char *path)
 {
@@ -19,50 +17,52 @@ losResult losSetAssetPath(const char *path)
     return LOS_SUCCESS;
 }
 
-std::vector<std::string> split(std::string s, const char delimiter)
+std::vector<lstd::string> split(lstd::string s) noexcept
 {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter))
+    std::vector<lstd::string> tokens;
+    lstd::string token;
+    lstd::Lexer lexer(s);
+    while (lexer.eof())
     {
-        if (token.find('\\') != std::string::npos)
+        lstd::Lexer::Lex lex = lexer.getLexWord();
+        if (lexer.getSubString(lex.start, lex.end) == '/' || lexer.getSubString(lex.start, lex.end) == '\\')
         {
-            auto path_tokens = split(token.c_str(), '\\');
-            for (auto t : path_tokens)
-                tokens.push_back(t);
+            //FIXME: lstd this should not move the token but copy idk why it's not
+            tokens.emplace_back(*new lstd::string(token.c_str()));
+            token.clear();
         }
         else
-            tokens.push_back(token);
+            token += lexer.getSubRealString(lex.start, lex.end);
     }
+    //FIXME: lstd this should not move the token but copy idk why it's not
+    tokens.emplace_back(*new lstd::string(token.c_str()));
+    token.clear();
     return tokens;
 }
 
-std::string getCorrectPath(const char *path)
+lstd::string getCorrectPath(const char *path)
 {
-    std::string ret_path;
-    auto path_tokens = split(std::move(path), '/');
+    lstd::string ret_path;
+    auto path_tokens = split(std::move(path));
     for (auto &tokens : path_tokens)
     {
         if (tokens[0] == '$')
         {
-            std::string command;
+            lstd::string command;
             {
-                std::string processed_1 = tokens.substr(2);
+                lstd::string processed_1 = tokens.substr(2);
                 command = processed_1.substr(0, processed_1.size() - 1);
             }
             if (command == "binary_base")
             {
-                std::string path_os;
-                path_os = std::move(getCurrentPath());
-                auto sun_tuk = split(std::move(path_os), '/');
+                auto sun_tuk = split(std::move(getCurrentPath()));
 #if CMAKE_SYSTEM_NUMBER == 0
-                for (size i = 0; i < sun_tuk.size(); i++)
+                for (data_size i = 0; i < sun_tuk.size(); i++)
 #endif
 #if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
-                for (size i = 0; i < sun_tuk.size() - 1; i++)
+                    for (size i = 0; i < sun_tuk.size() - 1; i++)
 #endif
-                    ret_path += (sun_tuk[i] += "/");
+                        ret_path += (sun_tuk[i] += '/');
             }
             else if (command == "asset_base")
             {
@@ -70,8 +70,10 @@ std::string getCorrectPath(const char *path)
                 ret_path += '/';
             }
         }
+        else if(tokens.find('.') != lstd::string::npos)
+            ret_path += tokens;
         else
-            ret_path += (tokens += "/");
+            ret_path += (tokens += '/');
     }
-    return ret_path.substr(0, ret_path.size() - 1);
+    return ret_path;
 }

@@ -1,15 +1,12 @@
 #include "../Cmake.h"
 #if  CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
-#include <Components/Defines.h>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
+#include <lstd/String.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-inline const std::string getCurrentPath()
+inline const lstd::string getCurrentPath()
 {
-    std::string path = new char[260];
+    lstd::string path = new char[260];
     GetModuleFileNameA(NULL, (LPSTR)path.c_str(), 260);
     return path;
 }

@@ -1,6 +1,7 @@
 debug-windows
 debug-windows-store
 debug-linux
+vulkan-loader
 build
 debug-osx
 vcpkg_installed

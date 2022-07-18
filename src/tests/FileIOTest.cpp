@@ -1,6 +1,6 @@
 #include "FileIOTest.h"
-#include <Components/FileIO.h>
-#include <string>
+#include <libos/FileIO.h>
+#include <lstd/String.h>
 #define TEST(File_Bits, Path, Test_Func)                       \
     {                                                          \
         losFileOpenInfo file;                                  \
@@ -22,7 +22,7 @@ losResult testNNorm(losFileHandle)
 
 losResult testNWrite(losFileHandle handle)
 {
-    std::string test_write_str = "this is a test";
+    lstd::string test_write_str = "this is a test";
     return losWriteFile(handle, (void *)test_write_str.c_str(), test_write_str.size());
 }
 
@@ -30,11 +30,11 @@ losResult testNRead(losFileHandle handle)
 {
     losResult res;
     void *read_str;
-    size read_str_size = 0;
+    data_size read_str_size = 0;
     if ((res = losReadFile(handle, &read_str, &read_str_size)) != LOS_SUCCESS)
         return res;
 
-    std::string test_read_str((char*)read_str, 0, read_str_size);
+    lstd::string test_read_str((char*)read_str, 0, read_str_size);
 
     if (read_str_size == 0)
         return LOS_ERROR_COULD_NOT_GET_CORRECT_DATA;
@@ -48,8 +48,8 @@ losResult testNRead(losFileHandle handle)
 struct testBINARY
 {
     uint16 index = 0;
-    size name_size;
-    std::string name;
+    data_size name_size;
+    lstd::string name;
 };
 
 losResult testBWrite(losFileHandle handle)
@@ -71,7 +71,7 @@ losResult testBRead(losFileHandle handle)
     test_write_str.name = "this is a test";
 
     void *read_str;
-    size read_str_size = 0;
+    data_size read_str_size = 0;
     if ((res = losReadFile(handle, &read_str, &read_str_size)) != LOS_SUCCESS)
         return res;
 
@@ -98,9 +98,9 @@ losResult testFileIOMain()
     printf("FILEIO TESTS:\n");
     losResult res;
     losFileHandle handle;
-    std::string path = "$[binary_base]\\test.txt";
-    std::string path_2 = "$[binary_base]/test.txt";
-    std::string path_3 = "$[binary_base]/test.bin";
+    lstd::string path = "$[binary_base]\\test.txt";
+    lstd::string path_2 = "$[binary_base]/test.txt";
+    lstd::string path_3 = "$[binary_base]/test.bin";
 
     printf("create file odd path test(Normal)\n");
     TEST(LOS_FILE_BIT_CREATE, path.data(), testNNorm)

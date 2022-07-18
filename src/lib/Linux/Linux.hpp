@@ -1,14 +1,11 @@
 #pragma once
 #include "../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#include <Components/Defines.h>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
+#include <libos/Defines.h>
 #include <unistd.h>
 #include <libgen.h>
 
-inline std::string getCurrentPath()
+inline const char* getCurrentPath()
 {
     char result[4096];
     (void)readlink("/proc/self/exe", result, 4096);

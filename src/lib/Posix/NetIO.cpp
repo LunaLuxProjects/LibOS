@@ -1,10 +1,10 @@
 #include "../Cmake.h"
-#include <Components/Defines.h>
-#include <Components/NetIO.h>
+#include <libos/Defines.h>
+#include <libos/NetIO.h>
 #include <vector>
 #if CMAKE_SYSTEM_NUMBER == 0
 #    include <arpa/inet.h>
-#    include <cstdio>
+#    include <lstd/ClibLink.h>
 #    include <netdb.h>
 #    include <sys/socket.h>
 #    include <unistd.h>
@@ -24,8 +24,8 @@ losResult tellError()
 #    pragma comment(lib, "Ws2_32.lib")
 #    define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #    define WIN32_LEAN_AND_MEAN
-#    include <windows.h>
 #    include <iphlpapi.h>
+#    include <windows.h>
 #    include <winsock2.h>
 #    include <ws2tcpip.h>
 #    define _ConnectSocket SOCKET ConnectSocket = INVALID_SOCKET
@@ -83,38 +83,38 @@ struct losSocket_T
     bool isTCP = false;
 };
 
-uint32 *losNetworkBytesToSystemBytes(const uint32 *data, const size data_size)
+uint32 *losNetworkBytesToSystemBytes(const uint32 *data, const data_size size)
 {
     std::vector<uint32> bytes;
-    bytes.reserve(data_size);
-    for (size i = 0; i < data_size; i++)
+    bytes.reserve(size);
+    for (data_size i = 0; i < size; i++)
         bytes.emplace_back(ntohl(data[i]));
     return std::move(bytes.data());
 }
 
-uint32 *losSystemBytesToNetworkBytes(const uint32 *data, const size data_size)
+uint32 *losSystemBytesToNetworkBytes(const uint32 *data, const data_size size)
 {
     std::vector<uint32> bytes;
-    bytes.reserve(data_size);
-    for (size i = 0; i < data_size; i++)
+    bytes.reserve(size);
+    for (data_size i = 0; i < size; i++)
         bytes.emplace_back(htonl(data[i]));
     return std::move(bytes.data());
 }
 
-int32 *losNetworkBytesToSystemBytesSigned(const int32 *data, const size data_size)
+int32 *losNetworkBytesToSystemBytesSigned(const int32 *data, const data_size size)
 {
     std::vector<int32> bytes;
-    bytes.reserve(data_size);
-    for (size i = 0; i < data_size; i++)
+    bytes.reserve(size);
+    for (data_size i = 0; i < size; i++)
         bytes.emplace_back(ntohl(data[i]));
     return std::move(bytes.data());
 }
 
-int32 *losSystemBytesToNetworkBytesSigned(const int32 *data, const size data_size)
+int32 *losSystemBytesToNetworkBytesSigned(const int32 *data, const data_size size)
 {
     std::vector<int32> bytes;
-    bytes.reserve(data_size);
-    for (size i = 0; i < data_size; i++)
+    bytes.reserve(size);
+    for (data_size i = 0; i < size; i++)
         bytes.emplace_back(htonl(data[i]));
     return std::move(bytes.data());
 }
@@ -178,12 +178,12 @@ losResult losCreateSocket(losSocket *socket_in, const losCreateSocketInfo &socke
 #    pragma warning(push)
 #    pragma warning(disable : 4244)
 #endif
-losResult losReadSocket(losSocket socket, void *data, size *data_size)
+losResult losReadSocket(losSocket socket, void *data, data_size *size)
 {
     preLoad(false);
     int iResult = 0;
     if (socket->isTCP)
-        iResult = recv(socket->ConnectSocket, (char *)data, *data_size, 0);
+        iResult = recv(socket->ConnectSocket, (char *)data, *size, 0);
     else
         return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
 
@@ -195,17 +195,17 @@ losResult losReadSocket(losSocket socket, void *data, size *data_size)
         return LOS_SUCCESS;
 }
 
-losResult losWriteSocket(losSocket socket, const void *data, const size data_size)
+losResult losWriteSocket(losSocket socket, const void *data, const data_size size)
 {
     preLoad(false);
     if (socket->isTCP)
     {
-        if (send(socket->ConnectSocket, (const char *)data, data_size, 0) < 0)
+        if (send(socket->ConnectSocket, (const char *)data, size, 0) < 0)
             return tellError();
     }
     else
     {
-        if (sendto(socket->ConnectSocket, (const char *)data, data_size, 0, (struct sockaddr *)&socket->server_address,
+        if (sendto(socket->ConnectSocket, (const char *)data, size, 0, (struct sockaddr *)&socket->server_address,
                    socket->server_address_size) < 0)
             return tellError();
     }

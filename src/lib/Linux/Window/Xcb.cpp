@@ -1,14 +1,18 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.hpp"
-#    include "../../InternalRefractile.hpp"
+#    include "../../Interface/Headers/AbstractGraphicsContex.hpp"
+#    include "../Graphics/VkComponents/CVkError.hpp"
+#    include "../Graphics/VkComponents/CVkInstance.hpp"
+#    include "../Graphics/Vulkan.hpp"
 #    include "Xcb.hpp"
-#    include <cstdlib>
-#    include <cstring>
+#    include <lstd/ClibLink.h>
+#    include <vulkan/vulkan_core.h>
+#    include <vulkan/vulkan_xcb.h>
+#    include <xcb/xcb.h>
 
-LinuxWindowPlatform XcbWindow::getPlatform() const noexcept
+AbstractWindowPlatform XcbWindow::getPlatform() const noexcept
 {
-    return LinuxWindowPlatform::XCB_LIB_WINDOW;
+    return AbstractWindowPlatform::XCB_LIB_WINDOW;
 }
 
 XcbWindow::XcbWindow(const char *title, losSize win_size)
@@ -41,27 +45,13 @@ XcbWindow::XcbWindow(const char *title, losSize win_size)
 
     /* Map the window on the screen */
     xcb_map_window(con, win);
-    xcb_screen_t* screen = xcb_setup_roots_iterator(xcb_get_setup(con)).data;
+    xcb_screen_t *screen = xcb_setup_roots_iterator(xcb_get_setup(con)).data;
 
-    const uint32_t coords[] = {(static_cast<uint32_t>(screen->width_in_pixels) / 3), (static_cast<uint32_t>(screen->height_in_pixels) / 4)};
+    const uint32_t coords[] = {(static_cast<uint32_t>(screen->width_in_pixels) / 3),
+                               (static_cast<uint32_t>(screen->height_in_pixels) / 4)};
     xcb_configure_window(con, win, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, coords);
     /* Make sure commands are sent before we pause, so window is shown */
     xcb_flush(con);
-}
-
-losResult XcbWindow::losCreateKeyboard() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult XcbWindow::losCreateMouse() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult XcbWindow::losCreateTouch() noexcept
-{
-    return LOS_SUCCESS;
 }
 
 bool XcbWindow::hasWindowClosed() const noexcept
@@ -126,8 +116,8 @@ losResult XcbWindow::losUpdateWindow() noexcept
         if (isInWindow)
         {
             auto mouse_move = reinterpret_cast<xcb_motion_notify_event_t *>(event);
-            x = mouse_move->event_x;
-            y = mouse_move->event_y;
+            x = static_cast<uint16>(mouse_move->event_x);
+            y = static_cast<uint16>(mouse_move->event_y);
         }
     }
     break;
@@ -171,12 +161,12 @@ losResult XcbWindow::losRequestClose() noexcept
     return LOS_SUCCESS;
 }
 
-losPosition XcbWindow::losRequestMousePosition() noexcept
+losPosition XcbWindow::losRequestMousePosition() const noexcept
 {
     return {x, y};
 }
 
-losPosition XcbWindow::losRequestMouseWheelDelta() noexcept
+losPosition XcbWindow::losRequestMouseWheelDelta() const noexcept
 {
     return {0, 0};
 }
@@ -186,35 +176,24 @@ losPosition XcbWindow::losIsBeingPressed() const noexcept
     return {x, y};
 }
 
-losResult XcbWindow::losDestroyKeyboard() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult XcbWindow::losDestroyMouse() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult XcbWindow::losDestroyTouch() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult XcbWindow::losDestroyWindow() noexcept
+void XcbWindow::losDestroyWindow() noexcept
 {
     xcb_destroy_window(con, win);
     xcb_disconnect(con);
     free(atom_wm_delete_window);
-    return LOS_SUCCESS;
 }
 
-losResult XcbWindow::losCreateVulkanSurface(refHandle handle) noexcept
+losResult XcbWindow::losCreateWindowSurface(AbstractGraphicsContext *handle) noexcept
 {
+    VulkanContext *context = static_cast<VulkanContext *>(handle);
     VkResult result;
     const VkXcbSurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR, nullptr, 0, con, win};
-    VK_TEST(vkCreateXcbSurfaceKHR((*handle).instance, &surface_info, nullptr, &(*handle).surface),
-            LOS_ERROR_COULD_NOT_INIT)
+    [[unlikely]] if (handle->check((result = vkCreateXcbSurfaceKHR(~(*context->getInst()), &surface_info, nullptr,
+                                                                   context->setSurf()))))
+    {
+        printf("LIB OS: Vulkan Error: %s\n", std::to_string(vkresult_translation_table.find(result)).c_str());
+        return LOS_ERROR_COULD_NOT_INIT;
+    }
     return LOS_SUCCESS;
 }
 #endif

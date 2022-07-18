@@ -9,110 +9,9 @@
 #include <vector>
 
 #include "Share.hpp"
-
-#define PROFILE_NAME VP_LUNARG_DESKTOP_PORTABILITY_2021_NAME
-#define PROFILE_SPEC_VERSION VP_LUNARG_DESKTOP_PORTABILITY_2021_SPEC_VERSION
 losResult createSwapChain(refHandle handle,bool first);
 void destroySwapchain(refHandle handle);
 
-bool check(VkResult result,refHandle handle)
-{
-    if (result == VK_SUCCESS) return false;
-    if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
-    {
-        if(!(*handle->window)->window->hasWindowClosed())
-        {
-            destroySwapchain(handle);
-            (void)createSwapChain(handle,false);
-        }
-        return false;
-    }
-    return true;
-}
-
-const char *getError(VkResult result)
-{
-    switch (result)
-    {
-    case VK_NOT_READY:
-        return "VK_NOT_READY";
-    case VK_TIMEOUT:
-        return "VK_TIMEOUT";
-    case VK_EVENT_SET:
-        return "VK_EVENT_SET";
-    case VK_EVENT_RESET:
-        return "VK_EVENT_RESET";
-    case VK_INCOMPLETE:
-        return "VK_INCOMPLETE";
-    case VK_ERROR_OUT_OF_HOST_MEMORY:
-        return "VK_ERROR_OUT_OF_HOST_MEMORY";
-    case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-        return "VK_ERROR_OUT_OF_DEVICE_MEMORY";
-    case VK_ERROR_INITIALIZATION_FAILED:
-        return "VK_ERROR_INITIALIZATION_FAILED";
-    case VK_ERROR_DEVICE_LOST:
-        return "VK_ERROR_DEVICE_LOST";
-    case VK_ERROR_MEMORY_MAP_FAILED:
-        return "VK_ERROR_MEMORY_MAP_FAILED";
-    case VK_ERROR_LAYER_NOT_PRESENT:
-        return "VK_ERROR_LAYER_NOT_PRESENT";
-    case VK_ERROR_EXTENSION_NOT_PRESENT:
-        return "VK_ERROR_EXTENSION_NOT_PRESENT";
-    case VK_ERROR_FEATURE_NOT_PRESENT:
-        return "VK_ERROR_FEATURE_NOT_PRESENT";
-    case VK_ERROR_INCOMPATIBLE_DRIVER:
-        return "VK_ERROR_INCOMPATIBLE_DRIVER";
-    case VK_ERROR_TOO_MANY_OBJECTS:
-        return "VK_ERROR_TOO_MANY_OBJECTS";
-    case VK_ERROR_FORMAT_NOT_SUPPORTED:
-        return "VK_ERROR_FORMAT_NOT_SUPPORT";
-    case VK_ERROR_FRAGMENTED_POOL:
-        return "VK_ERROR_FRAGMENTED_POOL";
-    case VK_ERROR_UNKNOWN:
-        return "VK_ERROR_UNKNOWN";
-    case VK_ERROR_OUT_OF_POOL_MEMORY:
-        return "VK_ERROR_OUT_OF_POOL";
-    case VK_ERROR_INVALID_EXTERNAL_HANDLE:
-        return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
-    case VK_ERROR_FRAGMENTATION:
-        return "VK_ERROR_FRAGMENTATION";
-    case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
-        return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
-    case VK_ERROR_SURFACE_LOST_KHR:
-        return "VK_ERROR_SURFACE_LOST_KHR";
-    case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
-        return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
-    case VK_SUBOPTIMAL_KHR:
-        return "VK_SUBOPTIMAL_KHR";
-    case VK_ERROR_OUT_OF_DATE_KHR:
-        return "VK_ERROR_OUT_OF_DATE_KHR";
-    case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
-        return "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR";
-    case VK_ERROR_VALIDATION_FAILED_EXT:
-        return "VK_ERROR_VALIDATION_FAILED_EXT";
-    case VK_ERROR_INVALID_SHADER_NV:
-        return "VK_ERROR_INVALID_SHADER_NV";
-    case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
-        return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
-    case VK_ERROR_NOT_PERMITTED_EXT:
-        return "VK_ERROR_NOT_PERMITTED_EXT";
-    case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
-        return "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
-    case VK_THREAD_IDLE_KHR:
-        return "VK_THREAD_IDLE_KHR";
-    case VK_THREAD_DONE_KHR:
-        return "VK_THREAD_DONE_KHR";
-    case VK_OPERATION_DEFERRED_KHR:
-        return "VK_OPERATION_DEFERRED_KHR";
-    case VK_OPERATION_NOT_DEFERRED_KHR:
-        return "VK_OPERATION_NOT_DEFERED_KHR";
-    case VK_PIPELINE_COMPILE_REQUIRED_EXT:
-        return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
-    default:
-        printf("LIB OS: Vulkan Error Not Translatable: %d\n", result);
-        return "";
-    }
-}
 
 void createSwapChainInfo(refHandle& handle,VkSwapchainCreateInfoKHR* swap_chain_create_info,VkSwapchainKHR old_swap_chain) noexcept
 {
@@ -289,114 +188,7 @@ void destroySwapchain(refHandle handle)
 
 losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refCreateGraphicContextInfo& info) noexcept
 {
-    VkResult result;
-    handle->used_depth = info.has_depth_stencil;
-    handle->sample_count = info.sample_count;
-    handle->window = &window;
-    const VpProfileProperties profile_properties = {PROFILE_NAME, PROFILE_SPEC_VERSION};
-    //instance
     {
-        // Check if the profile is supported at instance level
-        VkBool32 profile_supported;
-        result = vpGetInstanceProfileSupport(nullptr, &profile_properties, &profile_supported);
-
-        if (!profile_supported)
-        {
-            printf("LIB OS: Vulkan Error: %s\n", "Required Profile Not Supported"); 
-            return LOS_ERROR_COULD_NOT_INIT;
-        }
-
-        const VkApplicationInfo app_info{VK_STRUCTURE_TYPE_APPLICATION_INFO,
-                                       nullptr,"LibOS_app",VK_MAKE_VERSION(1, 0, 0),
-                                       "RefractileAPI",VK_MAKE_VERSION(1, 0, 0),
-                                       VK_API_VERSION_1_3};
-
-        const char * extensions[] = {VK_KHR_SURFACE_EXTENSION_NAME,VK_KHR_WSI_SURFACE_EXTENSION_NAME};
-        const VkInstanceCreateInfo inst_info{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, nullptr, 0, &app_info, 0, nullptr, 1 + VK_KHR_WSI_SURFACE_EXTENSION_NAME_SIZE, extensions};
-        const VpInstanceCreateInfo i_info {&inst_info,&profile_properties,0};
-
-        VK_TEST(vpCreateInstance(&i_info,nullptr,&handle->instance),LOS_ERROR_COULD_NOT_INIT)
-    }
-    //surface
-    {
-#if CMAKE_SYSTEM_NUMBER == 0
-        window->window->losCreateVulkanSurface(handle);
-#endif
-#if CMAKE_SYSTEM_NUMBER == 2
-        const VkWin32SurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, nullptr, 0,
-                                                        GetModuleHandle(nullptr),window->win_hand};
-
-        VK_TEST(vkCreateWin32SurfaceKHR(handle->instance, &surface_info, nullptr, &handle->surface),LOS_ERROR_COULD_NOT_INIT)
-#endif
-    }
-    //physical device
-    {
-        uint32 p_count = 0;
-        VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, nullptr),LOS_ERROR_COULD_NOT_INIT)
-        std::vector<VkPhysicalDevice> devices;
-        devices.resize(p_count);
-        VK_TEST(vkEnumeratePhysicalDevices(handle->instance, &p_count, devices.data()),LOS_ERROR_COULD_NOT_INIT)
-        [[unlikely]]if(devices.empty())
-        {
-            printf("LIB OS: Vulkan ERROR: %s\n","No Vulkan Device Found");
-            return LOS_ERROR_COULD_NOT_INIT;
-        }
-        [[likely]]if(devices.size() == 1)
-        {
-            printf("LIB OS: Vulkan Info: %s\n","We only found one physical device!"); 
-            VkBool32 profile_supported;
-            result = vpGetPhysicalDeviceProfileSupport(handle->instance,devices[0], &profile_properties, &profile_supported);
-            if (!profile_supported)
-            {
-                VkPhysicalDeviceProperties info;
-                vkGetPhysicalDeviceProperties(devices[0], &info);
-                printf("LIB OS: Vulkan WARNING: Device - %s | %s\n",info.deviceName,"Device Required Profile Not Supported"); 
-            }
-            handle->physical = devices[0];
-        }
-        else
-        {
-            if(!info.find_best_device)
-                handle->physical = devices[0];
-            else
-            {
-                std::vector<VkPhysicalDevice> best_devices;
-                {
-                    std::vector<VkPhysicalDevice> supported_devices;
-                    {
-                        for(auto& dev: devices)
-                        {
-                            VkBool32 profile_supported;
-                            result = vpGetPhysicalDeviceProfileSupport(handle->instance,dev, &profile_properties, &profile_supported);
-                            if (profile_supported)
-                                supported_devices.emplace_back(dev);
-                        }
-                        [[unlikely]]if(supported_devices.empty())
-                        {
-                            printf("LIB OS: Vulkan ERROR: %s\n","No Device Has Required Profile Not Supported");
-                            return LOS_ERROR_COULD_NOT_INIT;
-                        }
-                    }
-                    devices.clear();
-                    for(auto& dev: supported_devices)
-                    {
-                        VkPhysicalDeviceProperties device_properties;
-                        vkGetPhysicalDeviceProperties(dev,&device_properties);
-                        if(device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-                            best_devices.emplace_back(dev);
-                    }
-                    supported_devices.clear();
-                }
-                [[likely]]if(best_devices.size() <= 2)
-                    handle->physical = best_devices[0];
-                else
-                {
-                    printf("LIBOS vulkan ERROR: %s\n","Multiple Best fitting devices found but lib dose not support finding the best matching yet");
-                    return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
-                }
-            }
-        }
-
         VkBool32 support{false};
         VK_TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, handle->graphic_family_index, handle->surface, &support),LOS_ERROR_COULD_NOT_INIT)
         [[unlikely]] if (!support)
@@ -435,56 +227,7 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         {
             printf("LIB OS: Vulkan Error: %s\n", "no surface formats found"); 
             return LOS_ERROR_COULD_NOT_INIT;
-        }
-
-        uint32 i = 0;
-        for (const auto &queueFamily : queueFamilies)
-        {
-            (void)queueFamily;
-            VkBool32 presentSupport = false;
-            VK_TEST(vkGetPhysicalDeviceSurfaceSupportKHR(handle->physical, i, handle->surface, &presentSupport),LOS_ERROR_COULD_NOT_INIT)
-            if (presentSupport)
-            {
-                handle->present_family_index = i;
-                break;
-            }
-            i++;
-        }
-        i = 0;
-        for (const auto &queueFamily : queueFamilies)
-        {
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            {
-                handle->graphic_family_index = i;
-                break;
-            }
-            i++;
-        }            
-    }
-    //device
-    {
-        float queuePriority = 1.0f;
-        const VkDeviceQueueCreateInfo queue_create_info = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr, 0, handle->graphic_family_index, 1, &queuePriority};
-        const VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,nullptr,0,1,&queue_create_info,0,nullptr,0,nullptr,nullptr};
-        const VpDeviceCreateInfo profile_device_info = {&device_create_info,&profile_properties,0};
-        VK_TEST(vpCreateDevice(handle->physical,&profile_device_info,nullptr,&handle->device),LOS_ERROR_COULD_NOT_INIT)
-        vkGetDeviceQueue(handle->device, handle->graphic_family_index, 0, &handle->graphics_queue);
-        [[likely]]if (handle->present_family_index != handle->graphic_family_index)
-        {
-            vkGetDeviceQueue(handle->device, handle->present_family_index, 0, &handle->present_queue);
-        } 
-        else
-        handle->present_queue = handle->graphics_queue;
-    }
-    //memory management
-    {
-        VmaAllocatorCreateInfo allocatorInfo = {};
-        allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-        allocatorInfo.physicalDevice = handle->physical;
-        allocatorInfo.device = handle->device;
-        allocatorInfo.instance = handle->instance;
-
-        VK_TEST(vmaCreateAllocator(&allocatorInfo, &handle->vulkan_allocator),LOS_ERROR_COULD_NOT_INIT)
+        }      
     }
     //render pass
     {
@@ -565,31 +308,14 @@ losResult refAppendGraphicsContext(refHandle handle, losWindow window,const refC
         destroySwapchain(handle);
         return createSwapChain(handle,false);
     };
-    //present semaphore
-    {
-        VkSemaphoreCreateInfo semaphore_create_info{};
-        semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        semaphore_create_info.pNext = nullptr;
-        semaphore_create_info.flags = 0;
         VK_TEST(vkCreateSemaphore(handle->device, &semaphore_create_info, nullptr, &handle->present_semaphore),LOS_ERROR_COULD_NOT_INIT);
         VK_TEST(vkCreateSemaphore(handle->device, &semaphore_create_info, nullptr, &handle->render_semaphore),LOS_ERROR_COULD_NOT_INIT);
-    }
-    return LOS_SUCCESS;
 }
 
 losResult refUnAppendGraphicsContext(refHandle handle) noexcept
 {
-    handle->closing = true;
-    vkDeviceWaitIdle(handle->device);
     destroySwapchain(handle);
     vkDestroyRenderPass(handle->device, handle->pass,nullptr);
-    vkDestroySemaphore(handle->device, handle->render_semaphore,nullptr);
-    vkDestroySemaphore(handle->device, handle->present_semaphore,nullptr);
     vmaDestroyAllocator(handle->vulkan_allocator);
-    vkDeviceWaitIdle(handle->device);
-    vkDestroyDevice(handle->device,nullptr);
-    vkDestroySurfaceKHR(handle->instance, handle->surface, nullptr);
-    vkDestroyInstance(handle->instance, nullptr);
-    return LOS_SUCCESS;
 }
 #endif

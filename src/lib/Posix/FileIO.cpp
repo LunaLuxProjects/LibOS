@@ -1,5 +1,5 @@
 #include "../Cmake.h"
-#include <Components/FileIO.h>
+#include <libos/FileIO.h>
 #include "../IFileIO.hpp"
 #if CMAKE_SYSTEM_NUMBER == 0
 #include <fcntl.h>
@@ -8,12 +8,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <iostream>
 
 struct losFileHandle_T
 {
     int n_handle;
-    std::string path;
+    lstd::string path;
     bool flipEndienness = false;
     bool closeAfterDone = false;
 };
@@ -106,7 +105,7 @@ losResult losCloseFile(losFileHandle handle)
     return LOS_SUCCESS;
 }
 
-losResult losReadFile(losFileHandle handle, void **data_ptr, size* data_size)
+losResult losReadFile(losFileHandle handle, void **data_ptr, data_size* size)
 {
     struct stat sb{};
     if (fstat(handle->n_handle, &sb) < 0)
@@ -115,9 +114,9 @@ losResult losReadFile(losFileHandle handle, void **data_ptr, size* data_size)
         losCloseFile(handle);
         return LOS_ERROR_COULD_NOT_GET_CORRECT_DATA;
     }
-    *data_size = (sb.st_size) * sizeof(char);
-    *data_ptr = malloc(*data_size);
-    ssize_t bytesRead = 0;
+    *size = (sb.st_size) * sizeof(char);
+    *data_ptr = malloc(*size);
+    sdata_size bytesRead = 0;
     if ((bytesRead = pread64(handle->n_handle, *data_ptr, sb.st_size, 0)) < 0)
     {
         perror("system error");
@@ -126,14 +125,14 @@ losResult losReadFile(losFileHandle handle, void **data_ptr, size* data_size)
     }
 
     if (data_ptr != nullptr)
-        *data_size = bytesRead;
+        *size = bytesRead;
 
     return LOS_SUCCESS;
 }
 
-losResult losWriteFile(losFileHandle handle, const void *data, const size data_size)
+losResult losWriteFile(losFileHandle handle, const void *data, const data_size data_data_size)
 {
-    if (pwrite64(handle->n_handle, data, data_size, 0) < 0)
+    if (pwrite64(handle->n_handle, data, data_data_size, 0) < 0)
     {
         perror("system error");
         losCloseFile(handle);

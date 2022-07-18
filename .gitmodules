@@ -1,0 +1,3 @@
+[submodule "Includes/lstd"]
+	path = Includes/lstd
+	url = git@github.com:LunaLuxProjects/LibStd.git

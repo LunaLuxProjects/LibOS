@@ -142,7 +142,7 @@ typedef struct losWindowInfo
     bool is_compositeServer = false;
     losSize window_size;
     char* title;
-    size title_size;
+    data_size title_size;
     requestObjectCallback request_callback;
 } losWindowInfo;
 

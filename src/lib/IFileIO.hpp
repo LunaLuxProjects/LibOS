@@ -1,3 +1,3 @@
 #pragma once
-#include <string>
-std::string getCorrectPath(const char*);
+#include <lstd/String.h>
+lstd::string getCorrectPath(const char*);

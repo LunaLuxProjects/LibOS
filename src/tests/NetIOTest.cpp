@@ -1,6 +1,6 @@
 #include "NetIOTest.h"
-#include <Components/NetIO.h>
-#include <string>
+#include <libos/NetIO.h>
+#include <lstd/String.h>
 #define TEST(File_Bits, Path,Port, Test_Func)                       \
     {                                                          \
         losCreateSocketInfo file;                              \
@@ -23,12 +23,12 @@ losResult TCPtest(losSocket handle)
         return ret;
 
     char data[16];
-    size data_size = 16;
+    data_size data_size = 16;
     ret = losReadSocket(handle, (void*) &data, &data_size);
     if (ret != LOS_SUCCESS)
         return ret;
 
-    printf("Returned:%s\n", std::string(data, 0, data_size).c_str());
+    printf("Returned:%s\n", lstd::string(data, 0, data_size).c_str());
     
     return LOS_SUCCESS;
 }
@@ -48,7 +48,7 @@ losResult testNetIOMain()
     printf("NET_IO TESTS:\n");
     losResult res;
     losSocket handle;
-    std::string address = "127.0.0.1";
+    lstd::string address = "127.0.0.1";
     TEST(LOS_SOCKET_UDP, address.data(), 54000, UDPtest);
     printf("test UDP Client passed\n");
     TEST(LOS_SOCKET_TCP, address.data(), 54000, TCPtest);

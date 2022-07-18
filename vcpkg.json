@@ -1,7 +1,0 @@
-{
-    "name": "libos",
-    "version-string": "latest",
-    "dependencies": [
-        "jsoncpp"
-    ]
-}

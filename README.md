@@ -47,8 +47,8 @@ Nobody is perfect, and sometimes we mess things up. That said, Here are some goo
 
 ## Platforms being worked on
 
-- Windows 11
-- Ubuntu latest
+- Windows 11 (win32 & uwp)
+- Ubuntu latest (xcb & wayland)
 
 ## Planned Platforms
 
@@ -56,6 +56,27 @@ Nobody is perfect, and sometimes we mess things up. That said, Here are some goo
 - Linux Arch base
 - Linux Debian base
 - Mac OS Big Sur & up
+
+## Platforms dependancys
+
+> ### Windows 10 & 11
+> all - MS Windows SDK
+
+> ### Windows UWP
+> all:
+> 1. MS Windows SDK
+> 2. C++/winRT
+> 3. MS UWP SDK
+
+> ### Linux
+> Wayland - `sudo apt-get install -y libwayland-dev`
+>
+> Xcb - `sudo apt-get install -y libx11-xcb-dev`
+>
+> Vulkan - `https://bit.ly/3yHn4dc` (shorted link to LunaG install Guide)
+>> debug - export VK_LOADER_DEBUG=all
+>
+> A.L.S.A - `sudo apt-get install -y libasound2-dev`
 
 ## LICENSE
 

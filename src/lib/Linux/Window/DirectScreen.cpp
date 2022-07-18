@@ -1,11 +1,11 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.hpp"
+#    include "../../Interface/Headers/AbstractGraphicsContex.hpp"
 #    include "DirectScreen.hpp"
 
-LinuxWindowPlatform DirectScreen::getPlatform() const noexcept
+AbstractWindowPlatform DirectScreen::getPlatform() const noexcept
 {
-    return LinuxWindowPlatform::DIRECT_SCREEN_WINDOW;
+    return AbstractWindowPlatform::DIRECT_SCREEN_WINDOW;
 };
 
 DirectScreen::DirectScreen(const char *, losSize)
@@ -19,11 +19,6 @@ losResult DirectScreen::losCreateKeyboard() noexcept
 }
 
 losResult DirectScreen::losCreateMouse() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult DirectScreen::losCreateTouch() noexcept
 {
     return LOS_SUCCESS;
 }
@@ -52,12 +47,12 @@ losResult DirectScreen::losRequestClose() noexcept
     return LOS_SUCCESS;
 };
 
-losPosition DirectScreen::losRequestMousePosition() noexcept
+losPosition DirectScreen::losRequestMousePosition() const noexcept
 {
     return {0, 0};
 }
 
-losPosition DirectScreen::losRequestMouseWheelDelta() noexcept
+losPosition DirectScreen::losRequestMouseWheelDelta() const noexcept
 {
     return {0, 0};
 }
@@ -67,27 +62,19 @@ losPosition DirectScreen::losIsBeingPressed() const noexcept
     return {0, 0};
 }
 
-losResult DirectScreen::losDestroyKeyboard() noexcept
+void DirectScreen::losDestroyKeyboard() noexcept
 {
-    return LOS_SUCCESS;
 }
 
-losResult DirectScreen::losDestroyMouse() noexcept
+void DirectScreen::losDestroyMouse() noexcept
 {
-    return LOS_SUCCESS;
 }
 
-losResult DirectScreen::losDestroyTouch() noexcept
+void DirectScreen::losDestroyWindow() noexcept
 {
-    return LOS_SUCCESS;
 }
 
-losResult DirectScreen::losDestroyWindow() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult DirectScreen::losCreateVulkanSurface(refHandle) noexcept
+losResult DirectScreen::losCreateWindowSurface(AbstractGraphicsContext*) noexcept
 {
     return LOS_SUCCESS;
 }

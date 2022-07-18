@@ -17,7 +17,7 @@ typedef struct losCreateSocketInfo
 {
     uint8 socketBits;
     const char* address;
-    size address_size;
+    data_size address_size;
     uint16 port;
 } losCreateSocketInfo;
 
@@ -27,13 +27,13 @@ typedef struct losCreateSocketServerListenInfo
     losListenCallback callback;
 } losCreateSocketServerListenInfo;
 
-EXPORT_DLL uint32 *losNetworkBytesToSystemBytes(const uint32 *,const size);
-EXPORT_DLL uint32 *losSystemBytesToNetworkBytes(const uint32 *, const size);
-EXPORT_DLL int32 *losNetworkBytesToSystemBytesSigned(const int32 *,const size);
-EXPORT_DLL int32 *losSystemBytesToNetworkBytesSigned(const int32 *, const size);
+EXPORT_DLL uint32 *losNetworkBytesToSystemBytes(const uint32 *,const data_size);
+EXPORT_DLL uint32 *losSystemBytesToNetworkBytes(const uint32 *, const data_size);
+EXPORT_DLL int32 *losNetworkBytesToSystemBytesSigned(const int32 *,const data_size);
+EXPORT_DLL int32 *losSystemBytesToNetworkBytesSigned(const int32 *, const data_size);
 
 EXPORT_DLL losResult losCreateSocket(losSocket *, const losCreateSocketInfo &);
-EXPORT_DLL losResult losReadSocket(losSocket, void *, size *);
-EXPORT_DLL losResult losWriteSocket(losSocket, const void *, const size);
+EXPORT_DLL losResult losReadSocket(losSocket, void *, data_size *);
+EXPORT_DLL losResult losWriteSocket(losSocket, const void *, const data_size);
 EXPORT_DLL losResult losListenSocket(losCreateSocketServerListenInfo &);
 EXPORT_DLL losResult losDestorySocket(losSocket);

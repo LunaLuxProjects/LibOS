@@ -1,8 +1,13 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 0
-#    include "../../Graphics/vkExternal.hpp"
-#    include "../../InternalRefractile.hpp"
+#    include "../../Interface/Headers/AbstractGraphicsContex.hpp"
+#    include "../Graphics/VkComponents/CVkError.hpp"
+#    include "../Graphics/Vulkan.hpp"
+#    include "../Graphics/VkComponents/CVkInstance.hpp"
 #    include "Wayland.hpp"
+#    include <vulkan/vulkan_core.h>
+#    include <vulkan/vulkan_wayland.h>
+#    include <wayland-client.h>
 
 /*
 
@@ -83,9 +88,9 @@ const wl_registry_listener registry_listener = {
     [](void *, wl_registry *, uint32_t) {}};
 */
 
-LinuxWindowPlatform WaylandWindow::getPlatform() const noexcept
+AbstractWindowPlatform WaylandWindow::getPlatform() const noexcept
 {
-    return LinuxWindowPlatform::WAYLAND_WINDOW;
+    return AbstractWindowPlatform::WAYLAND_WINDOW;
 };
 
 WaylandWindow::WaylandWindow(const char *title, losSize win_size)
@@ -138,10 +143,7 @@ losResult WaylandWindow::losCreateMouse() noexcept
 {
     return LOS_SUCCESS;
 }
-losResult WaylandWindow::losCreateTouch() noexcept
-{
-    return LOS_SUCCESS;
-}
+
 bool WaylandWindow::hasWindowClosed() const noexcept
 {
     return false;
@@ -164,11 +166,11 @@ losResult WaylandWindow::losRequestClose() noexcept
 {
     return LOS_SUCCESS;
 };
-losPosition WaylandWindow::losRequestMousePosition() noexcept
+losPosition WaylandWindow::losRequestMousePosition() const noexcept
 {
     return {0, 0};
 }
-losPosition WaylandWindow::losRequestMouseWheelDelta() noexcept
+losPosition WaylandWindow::losRequestMouseWheelDelta() const noexcept
 {
     return {0, 0};
 }
@@ -177,28 +179,21 @@ losPosition WaylandWindow::losIsBeingPressed() const noexcept
     return {0, 0};
 }
 
-losResult WaylandWindow::losDestroyKeyboard() noexcept
+void WaylandWindow::losDestroyKeyboard() noexcept
 {
     if (keyboard)
         wl_keyboard_destroy(keyboard);
-    return LOS_SUCCESS;
 }
 
-losResult WaylandWindow::losDestroyMouse() noexcept
+void WaylandWindow::losDestroyMouse() noexcept
 {
     if (pointer)
         wl_pointer_destroy(pointer);
     if (seat)
         wl_seat_destroy(seat);
-    return LOS_SUCCESS;
 }
 
-losResult WaylandWindow::losDestroyTouch() noexcept
-{
-    return LOS_SUCCESS;
-}
-
-losResult WaylandWindow::losDestroyWindow() noexcept
+void WaylandWindow::losDestroyWindow() noexcept
 {
     if (xdg_win_surface)
         xdg_surface_destroy(xdg_win_surface);
@@ -212,16 +207,19 @@ losResult WaylandWindow::losDestroyWindow() noexcept
         wl_registry_destroy(registry);
     if (display)
         wl_display_disconnect(display);
-    return LOS_SUCCESS;
 }
-
-losResult WaylandWindow::losCreateVulkanSurface(refHandle handle) noexcept
+losResult WaylandWindow::losCreateWindowSurface(AbstractGraphicsContext *handle) noexcept
 {
+    VulkanContext *context = static_cast<VulkanContext *>(handle);
     VkResult result;
     const VkWaylandSurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR, nullptr, 0,
                                                      display, surface};
-    VK_TEST(vkCreateWaylandSurfaceKHR((*handle).instance, &surface_info, nullptr, &(*handle).surface),
-            LOS_ERROR_COULD_NOT_INIT)
+    [[unlikely]] if (handle->check((result = vkCreateWaylandSurfaceKHR(~(*context->getInst()), &surface_info, nullptr,
+                                                                       context->setSurf()))))
+    {
+        printf("LIB OS: Vulkan Error: %s\n",std::to_string(vkresult_translation_table.find(result)).c_str()); 
+        return LOS_ERROR_COULD_NOT_INIT;
+    }
     return LOS_SUCCESS;
 }
 

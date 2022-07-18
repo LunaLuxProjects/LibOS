@@ -17,12 +17,12 @@ typedef struct losFileOpenInfo
 {
     uint8 fileBits;
     const char* path;
-	size  path_size;
+	data_size  path_size;
 
 } losFileOpenInfo;
 
 EXPORT_DLL losResult losSetAssetPath(const char* path);
 EXPORT_DLL losResult losOpenFile(losFileHandle *, const losFileOpenInfo &);
-EXPORT_DLL losResult losReadFile(losFileHandle, void **, size*);
-EXPORT_DLL losResult losWriteFile(losFileHandle,const void *,const size);
+EXPORT_DLL losResult losReadFile(losFileHandle, void **, data_size*);
+EXPORT_DLL losResult losWriteFile(losFileHandle,const void *,const data_size);
 EXPORT_DLL losResult losCloseFile(losFileHandle);

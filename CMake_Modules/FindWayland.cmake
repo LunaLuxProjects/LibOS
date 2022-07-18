@@ -1,68 +1,80 @@
-# https://git.sr.ht/~sircmpwn/sway/tree/server-decoration/CMake/FindWayland.cmake
-# Try to find Wayland on a Unix system
-#
-# This will define:
-#
-#   WAYLAND_FOUND       - True if Wayland is found
-#   WAYLAND_LIBRARIES   - Link these to use Wayland
-#   WAYLAND_INCLUDE_DIR - Include directory for Wayland
-#   WAYLAND_DEFINITIONS - Compiler flags for using Wayland
-#
-# In addition the following more fine grained variables will be defined:
-#
-#   WAYLAND_CLIENT_FOUND  WAYLAND_CLIENT_INCLUDE_DIR  WAYLAND_CLIENT_LIBRARIES
-#   WAYLAND_SERVER_FOUND  WAYLAND_SERVER_INCLUDE_DIR  WAYLAND_SERVER_LIBRARIES
-#   WAYLAND_EGL_FOUND     WAYLAND_EGL_INCLUDE_DIR     WAYLAND_EGL_LIBRARIES
-#   WAYLAND_CURSOR_FOUND  WAYLAND_CURSOR_INCLUDE_DIR  WAYLAND_CURSOR_LIBRARIES
-#
-# Copyright (c) 2013 Martin Gräßlin <mgraesslin@kde.org>
-#
-# Redistribution and use is allowed according to the terms of the BSD license.
-# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
 
-IF (NOT WIN32)
-  IF (WAYLAND_INCLUDE_DIR AND WAYLAND_LIBRARIES)
-    # In the cache already
-    SET(WAYLAND_FIND_QUIETLY TRUE)
-  ENDIF ()
+#[=======================================================================[.rst:
+FindWAYLAND
+--------
 
-  # Use pkg-config to get the directories and then use these values
-  # in the FIND_PATH() and FIND_LIBRARY() calls
-  FIND_PACKAGE(PkgConfig)
-  PKG_CHECK_MODULES(PKG_WAYLAND QUIET wayland-client wayland-server wayland-egl wayland-cursor)
+Find wayland (WAYLAND)
 
-  SET(WAYLAND_DEFINITIONS ${PKG_WAYLAND_CFLAGS})
+Find the WAYLAND libraries (``wayland-client``)
 
-  FIND_PATH(WAYLAND_CLIENT_INCLUDE_DIR  NAMES wayland-client.h HINTS ${PKG_WAYLAND_INCLUDE_DIRS})
-  FIND_PATH(WAYLAND_SERVER_INCLUDE_DIR  NAMES wayland-server.h HINTS ${PKG_WAYLAND_INCLUDE_DIRS})
-  FIND_PATH(WAYLAND_EGL_INCLUDE_DIR     NAMES wayland-egl.h    HINTS ${PKG_WAYLAND_INCLUDE_DIRS})
-  FIND_PATH(WAYLAND_CURSOR_INCLUDE_DIR  NAMES wayland-cursor.h HINTS ${PKG_WAYLAND_INCLUDE_DIRS})
+IMPORTED Targets
+^^^^^^^^^^^^^^^^
 
-  FIND_LIBRARY(WAYLAND_CLIENT_LIBRARIES NAMES wayland-client   HINTS ${PKG_WAYLAND_LIBRARY_DIRS})
-  FIND_LIBRARY(WAYLAND_SERVER_LIBRARIES NAMES wayland-server   HINTS ${PKG_WAYLAND_LIBRARY_DIRS})
-  FIND_LIBRARY(WAYLAND_EGL_LIBRARIES    NAMES wayland-egl      HINTS ${PKG_WAYLAND_LIBRARY_DIRS})
-  FIND_LIBRARY(WAYLAND_CURSOR_LIBRARIES NAMES wayland-cursor   HINTS ${PKG_WAYLAND_LIBRARY_DIRS})
+.. versionadded:: 3.12
 
-  set(WAYLAND_INCLUDE_DIR ${WAYLAND_CLIENT_INCLUDE_DIR} ${WAYLAND_SERVER_INCLUDE_DIR} ${WAYLAND_EGL_INCLUDE_DIR} ${WAYLAND_CURSOR_INCLUDE_DIR})
+This module defines :prop_tgt:`IMPORTED` target ``WAYLAND::WAYLAND``, if
+WAYLAND has been found.
 
-  set(WAYLAND_LIBRARIES ${WAYLAND_CLIENT_LIBRARIES} ${WAYLAND_SERVER_LIBRARIES} ${WAYLAND_EGL_LIBRARIES} ${WAYLAND_CURSOR_LIBRARIES})
+Result Variables
+^^^^^^^^^^^^^^^^
 
-  list(REMOVE_DUPLICATES WAYLAND_INCLUDE_DIR)
+This module defines the following variables:
 
-  include(FindPackageHandleStandardArgs)
+``WAYLAND_FOUND``
+  True if WAYLAND_INCLUDE_DIR & WAYLAND_LIBRARY are found
 
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND_CLIENT  DEFAULT_MSG  WAYLAND_CLIENT_LIBRARIES  WAYLAND_CLIENT_INCLUDE_DIR)
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND_SERVER  DEFAULT_MSG  WAYLAND_SERVER_LIBRARIES  WAYLAND_SERVER_INCLUDE_DIR)
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND_EGL     DEFAULT_MSG  WAYLAND_EGL_LIBRARIES     WAYLAND_EGL_INCLUDE_DIR)
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND_CURSOR  DEFAULT_MSG  WAYLAND_CURSOR_LIBRARIES  WAYLAND_CURSOR_INCLUDE_DIR)
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND         DEFAULT_MSG  WAYLAND_LIBRARIES         WAYLAND_INCLUDE_DIR)
+``WAYLAND_LIBRARIES``
+  List of libraries when using WAYLAND.
 
-  MARK_AS_ADVANCED(
-        WAYLAND_INCLUDE_DIR         WAYLAND_LIBRARIES
-        WAYLAND_CLIENT_INCLUDE_DIR  WAYLAND_CLIENT_LIBRARIES
-        WAYLAND_SERVER_INCLUDE_DIR  WAYLAND_SERVER_LIBRARIES
-        WAYLAND_EGL_INCLUDE_DIR     WAYLAND_EGL_LIBRARIES
-        WAYLAND_CURSOR_INCLUDE_DIR  WAYLAND_CURSOR_LIBRARIES
-  )
+``WAYLAND_INCLUDE_DIRS``
+  Where to find the WAYLAND headers.
 
-ENDIF ()
+Cache variables
+^^^^^^^^^^^^^^^
+
+The following cache variables may also be set:
+
+``WAYLAND_INCLUDE_DIR``
+  the WAYLAND include directory
+
+``WAYLAND_LIBRARY``
+  the absolute path of the wayland-client library
+#]=======================================================================]
+
+find_path(WAYLAND_INCLUDE_DIR NAMES wayland-client.h
+          DOC "The WAYLAND (wayland-client) include directory"
+)
+
+find_library(WAYLAND_LIBRARY NAMES wayland-client
+          DOC "The WAYLAND (wayland-client) library"
+)
+
+if(WAYLAND_INCLUDE_DIR AND EXISTS "${WAYLAND_INCLUDE_DIR}/wayland-version.h")
+  file(STRINGS "${WAYLAND_INCLUDE_DIR}/wayland-version.h" wayland_version_str REGEX "^#define[\t ]+WAYLAND_VERSION[\t ]+\".*\"")
+
+  string(REGEX REPLACE "^.*WAYLAND_VERSION[\t ]+\"([^\"]*)\".*$" "\\1" WAYLAND_VERSION_STRING "${wayland_version_str}")
+  unset(wayland_version_str)
+endif()
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(WAYLAND
+    REQUIRED_VARS
+        WAYLAND_INCLUDE_DIR
+        WAYLAND_LIBRARY 
+    VERSION_VAR 
+        WAYLAND_VERSION_STRING
+)
+
+if(WAYLAND_FOUND)
+    set( WAYLAND_LIBRARIES ${WAYLAND_LIBRARY} )
+    set( WAYLAND_INCLUDE_DIRS ${WAYLAND_INCLUDE_DIR} )
+    if(NOT TARGET WAYLAND::WAYLAND)
+        add_library(WAYLAND::WAYLAND UNKNOWN IMPORTED)
+        set_target_properties(WAYLAND::WAYLAND PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WAYLAND_INCLUDE_DIRS}")
+        set_property(TARGET WAYLAND::WAYLAND APPEND PROPERTY IMPORTED_LOCATION "${WAYLAND_LIBRARY}")
+    endif()
+endif()
+                                
+mark_as_advanced(WAYLAND_INCLUDE_DIR WAYLAND_LIBRARY)
