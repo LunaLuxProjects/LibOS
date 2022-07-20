@@ -21,7 +21,7 @@
 
 //TODO: audio output
 
-Win32AudioManager::Win32AudioManager(const size dev)
+Win32AudioManager::Win32AudioManager(const data_size dev)
 {
     HRESULT res;
     IMMDeviceEnumerator *_enum_;
@@ -44,7 +44,7 @@ Win32AudioManager::~Win32AudioManager()
     audio_client->Release();
 }
 
-losResult Win32AudioManager::getAudioDeviceProperties(const size dev, refAudioDeviceProperties *prop) noexcept
+losResult Win32AudioManager::getAudioDeviceProperties(const data_size dev, refAudioDeviceProperties *prop) noexcept
 {
     HRESULT res;
     IMMDeviceEnumerator *_enum_;

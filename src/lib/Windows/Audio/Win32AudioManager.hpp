@@ -8,9 +8,9 @@ class Win32AudioManager : public AbstractAudioManager
     WAVEFORMATEX *format = NULL;
   public:
     explicit Win32AudioManager()  = default;
-    virtual losResult getAudioDeviceProperties(const size, refAudioDeviceProperties*) noexcept override final;
+    virtual losResult getAudioDeviceProperties(const data_size, refAudioDeviceProperties*) noexcept override final;
     virtual uint32 getDeviceCount() noexcept override final;
-    Win32AudioManager(const size);
+    Win32AudioManager(const data_size);
     virtual ~Win32AudioManager() override final;
 };
 

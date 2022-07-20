@@ -1,7 +1,7 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 2
 #    include "../../IFileIO.hpp"
-#    include <Components/FileIO.h>
+#    include <libos/FileIO.h>
 #    include <atomic>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -94,7 +94,7 @@ losResult losOpenFile(losFileHandle *handle, const losFileOpenInfo &info)
 }
 
 std::atomic<DWORD> BytesTransferred;
-losResult losReadFile(losFileHandle handle, void **data_ptr, size *data_size)
+losResult losReadFile(losFileHandle handle, void **data_ptr, data_size *data_size)
 {
     OVERLAPPED overlapped = {0};
     FILE_STANDARD_INFO file_info = {0};
@@ -124,7 +124,7 @@ losResult losReadFile(losFileHandle handle, void **data_ptr, size *data_size)
     return LOS_SUCCESS;
 }
 
-losResult losWriteFile(losFileHandle handle, const void *data_ptr, const size data_size)
+losResult losWriteFile(losFileHandle handle, const void *data_ptr, const data_size data_size)
 {
     DWORD dwBytesWrite = 0;
     if (WriteFile(handle->fileHandle, data_ptr, (DWORD)data_size, &dwBytesWrite, nullptr) == 0)

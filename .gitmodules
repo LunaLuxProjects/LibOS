@@ -1,3 +1,6 @@
 [submodule "Includes/lstd"]
 	path = Includes/lstd
 	url = git@github.com:LunaLuxProjects/LibStd.git
+[submodule "LibShader"]
+	path = LibShader
+	url = https://github.com/LunaLuxProjects/LibShader.git

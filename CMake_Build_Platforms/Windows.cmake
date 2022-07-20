@@ -13,6 +13,7 @@ set(LibOS_Source ${LibOS_Source}
     src/lib/Windows/Audio/Win32AudioManager.cpp
     src/lib/Windows/FileIO/Win32FileIO.cpp
     src/lib/Windows/Window/Win32Window.cpp
+    src/lib/Windows/Graphics/DirectX.cpp
     # posix
     src/lib/Posix/NetIO.cpp)
 

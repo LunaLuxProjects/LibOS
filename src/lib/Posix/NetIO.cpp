@@ -183,7 +183,11 @@ losResult losReadSocket(losSocket socket, void *data, data_size *size)
     preLoad(false);
     int iResult = 0;
     if (socket->isTCP)
-        iResult = recv(socket->ConnectSocket, (char *)data, *size, 0);
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
+    iResult = recv(socket->ConnectSocket, (char *)data, static_cast<int>(*size), 0);
+#else
+    iResult = recv(socket->ConnectSocket, (char *)data, *size, 0);
+#endif
     else
         return LOS_ERROR_FEATURE_NOT_IMPLEMENTED;
 
@@ -200,13 +204,23 @@ losResult losWriteSocket(losSocket socket, const void *data, const data_size siz
     preLoad(false);
     if (socket->isTCP)
     {
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
+        if (send(socket->ConnectSocket, (const char *)data, static_cast<int>(size), 0) < 0)
+#else
         if (send(socket->ConnectSocket, (const char *)data, size, 0) < 0)
+#endif
             return tellError();
     }
     else
     {
+#if CMAKE_SYSTEM_NUMBER == 1 || CMAKE_SYSTEM_NUMBER == 2
+        if (sendto(socket->ConnectSocket, (const char *)data, static_cast<int>(size), 0,
+                   (struct sockaddr *)&socket->server_address,
+                   socket->server_address_size) < 0)
+#else
         if (sendto(socket->ConnectSocket, (const char *)data, size, 0, (struct sockaddr *)&socket->server_address,
                    socket->server_address_size) < 0)
+#endif
             return tellError();
     }
     return LOS_SUCCESS;

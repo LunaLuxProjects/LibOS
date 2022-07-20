@@ -1,8 +1,9 @@
 #pragma once
-#include "../../Interface/Headers/AbstractWindow.hpp"
+#include "../../Interface/Headers/Abstracts.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <memory>
+#include "../../Interface/Headers/AbstractWindow.hpp"
 
 class Win32Window : public AbstractWindow
 {
@@ -54,5 +55,5 @@ class Win32Window : public AbstractWindow
     virtual losPosition losIsBeingPressed() const noexcept final override;
     virtual void losDestroyWindow() noexcept final override;
 
-    losResult losCreateWindowSurface(refHandle handle) noexcept final override;
+    losResult losCreateWindowSurface(AbstractGraphicsContext* handle) noexcept final override;
 };

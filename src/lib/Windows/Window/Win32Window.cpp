@@ -1,6 +1,7 @@
 #include "../../Cmake.h"
 #if CMAKE_SYSTEM_NUMBER == 2
 #    include "Win32Window.hpp"
+#include "../../Interface/Headers/AbstractWindow.hpp"
 
 AbstractWindowPlatform Win32Window::getPlatform() const noexcept
 {
@@ -20,10 +21,11 @@ Win32Window::Win32Window(const char *title,const losSize window_size)
     wc.lpszClassName = static_cast<LPCSTR>("LibOSWindowClass");
     RegisterClassEx(&wc);
 
-    win_hand =
-        CreateWindowEx(0, static_cast<LPCSTR>("LibOSWindowClass"), title, WS_OVERLAPPEDWINDOW, 0, 0, window_size.width, window_size.height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    win_hand = CreateWindowEx(0, static_cast<LPCSTR>("LibOSWindowClass"), title, WS_OVERLAPPEDWINDOW, 0, 0,
+                              static_cast<int>(window_size.width), static_cast<int>(window_size.height), nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
     ShowWindow(win_hand, SW_SHOWDEFAULT);
-    MoveWindow(win_hand, GetSystemMetrics(SM_CXSCREEN) / 12, GetSystemMetrics(SM_CYSCREEN) / 12, window_size.width,window_size.height, true);
+    MoveWindow(win_hand, GetSystemMetrics(SM_CXSCREEN) / 12, GetSystemMetrics(SM_CYSCREEN) / 12,
+               static_cast<int>(window_size.width), static_cast<int>(window_size.height), true);
     SetWindowLongPtr(win_hand, GWLP_USERDATA, (LONG_PTR)this);
 }
 
@@ -156,7 +158,7 @@ void Win32Window::losDestroyWindow() noexcept
     UnregisterClassW(L"LibOSWindowClass", GetModuleHandle(nullptr));
 }
 
-losResult Win32Window::losCreateWindowSurface(refHandle) noexcept
+losResult Win32Window::losCreateWindowSurface(AbstractGraphicsContext*) noexcept
 {
     return LOS_SUCCESS;
 }
