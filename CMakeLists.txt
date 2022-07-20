@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22.0)
 project(libos CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMake_Modules)
+Set(LIBSHADER_TESTS OFF)
+add_subdirectory(LibShader)
 
 #options
 option(USE_SANATIZER ON)

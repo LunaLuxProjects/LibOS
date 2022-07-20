@@ -38,6 +38,7 @@ if(${BUILD_OF_JNI})
 endif()
 
 add_library(libos SHARED ${LibOS_Source})
+target_include_directories(libos PRIVATE ${PROJECT_SOURCE_DIR}/Includes  ${CMAKE_SOURCE_DIR}/LibShader/Includes/libshader STATIC)
 target_compile_options(libos PRIVATE -Wall -Wextra -Werror)
 if(${CMAKE_COMPILER_NUMBER} EQUAL 1)
   target_compile_options(libos PRIVATE -lgcc)
@@ -54,4 +55,4 @@ if(${BUILD_OF_JNI})
   set(LINK_LIBS ${LINK_LIBS} ${JNI_LIBRARIES})
 endif()
 
-target_link_libraries(libos PRIVATE ${LINK_LIBS}) 
+target_link_libraries(libos PRIVATE ${LINK_LIBS}  ${libshader}) 

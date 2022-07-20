@@ -18,7 +18,7 @@ set(LibOS_Source ${LibOS_Source}
     src/lib/Posix/NetIO.cpp)
 
 add_library(libos SHARED ${LibOS_Source})
-target_include_directories(libos PRIVATE ${PROJECT_SOURCE_DIR}/Includes)
+target_include_directories(libos PRIVATE ${PROJECT_SOURCE_DIR}/Includes  ${CMAKE_SOURCE_DIR}/LibShader/Includes/libshader STATIC)
 
 if(MSVC)
   target_compile_options(libos PRIVATE /W4 /WX)
@@ -33,3 +33,5 @@ if(${USE_SANATIZER})
       target_compile_options(libos PRIVATE -fsanitize=address,alignment,bounds,null,unreachable,integer -fno-omit-frame-pointer)
     endif()
 endif()
+
+target_link_libraries(libos PRIVATE ${LINK_LIBS}  ${libshader}) 
